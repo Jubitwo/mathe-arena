@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mathe-Arena – Teste dich selbst!</title>
+  <meta name="description" content="Mathe-Spielesammlung für die Klassen 5 bis 10 (Bildungsplan Baden-Württemberg) – Solo, Partner und Gruppe, drei Niveaustufen.">
+  <meta name="theme-color" content="#07061a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Mathe-Arena">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon-180.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-screen="start">
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#/klassen" aria-label="Zur Klassenwahl"><span class="pixel b1">MATHE</span><span class="pixel b2">ARENA</span></a>
+    <nav class="top-nav">
+      <a href="#/erfolge" class="top-btn" title="Erfolge &amp; Abzeichen">🏆 <span class="top-xp pixel"></span></a>
+      <a href="#/info" class="top-btn" title="Infos für Lehrkräfte">📘</a>
+      <button type="button" id="btn-sound" class="top-btn" title="Ton an/aus">🔊</button>
+      <button type="button" id="btn-beamer" class="top-btn" title="Beamer-Modus (große Schrift)">📺</button>
+      <button type="button" id="btn-full" class="top-btn" title="Vollbild">⛶</button>
+    </nav>
+  </header>
+
+  <main id="app" aria-live="polite"></main>
+
+  <noscript><p style="padding:2rem;color:#fff">Bitte JavaScript aktivieren, um die Mathe-Arena zu spielen.</p></noscript>
+
+  <!-- Kern -->
+  <script src="js/util.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/input.js"></script>
+  <!-- Aufgaben (Bildungsplan BW, Kl. 5–10) -->
+  <script src="js/topics/k5.js"></script>
+  <script src="js/topics/k6.js"></script>
+  <script src="js/topics/k7.js"></script>
+  <script src="js/topics/k8.js"></script>
+  <script src="js/topics/k9.js"></script>
+  <script src="js/topics/k10.js"></script>
+  <script src="js/topics/knobel.js"></script>
+  <!-- Spiele & Oberfläche -->
+  <script src="js/games.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
