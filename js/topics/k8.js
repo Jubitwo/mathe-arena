@@ -29,7 +29,7 @@
       const assign = U.shuffle(counts.flatMap((c, i) => Array(c).fill(i)));
       const vis = wheel(assign);
       const ci = U.ri(0, k - 1), cn = COLORS[ci][0], r = counts[ci];
-      if (l === 1) return FR(`Das Rad wird einmal gedreht. Wie groß ist die Wahrscheinlichkeit für <b>${cn}</b>?`, { n: r, d: n }, { vis, mq: '', hints: ['P = Anzahl günstiger Felder : Anzahl aller Felder'], sol: `${r} von ${n} Feldern sind ${cn}: P = ${F(r, n)}`, mistakes: r !== n - r ? [{ v: r / (n - r), msg: 'Teile durch die Anzahl ALLER Felder.' }] : [] });
+      if (l === 1) return FR(`Das Rad wird einmal gedreht. Wie groß ist die Wahrscheinlichkeit für <b>${cn}</b>?`, { n: r, d: n }, { vis, mq: '', hints: ['P = Anzahl günstiger Felder : Anzahl aller Felder'], sol: `${r} von ${n} Feldern ${r === 1 ? 'ist' : 'sind'} ${cn}: P = ${F(r, n)}${U.gcd(r, n) > 1 ? ' = ' + U.Ff(U.frac(r, n)) : ''}`, mistakes: r !== n - r ? [{ v: r / (n - r), msg: 'Teile durch die Anzahl ALLER Felder.' }] : [] });
       if (l === 2) {
         if (U.chance(0.5)) {
           let cj; do cj = U.ri(0, k - 1); while (cj === ci);
@@ -64,7 +64,7 @@
       const eq = `y = ${U.linF(m, b)}`;
       if (l === 1) {
         if (U.chance(0.5)) return N('Wo schneidet die Gerade die y-Achse? Gib den y-Achsenabschnitt b an.', b, { vis, mq: '', memOk: false, hints: ['Schau, wo die Gerade die senkrechte Achse kreuzt.'], sol: `Schnittpunkt (0|${U.fmt(b)}), also b = ${U.fmt(b)}` });
-        return N('Wie groß ist die Steigung m? (Das Steigungsdreieck hilft!)', m.n, { vis, mq: '', memOk: false, hints: ['Gehe 1 nach rechts. Wie viel geht es nach oben (+) oder unten (−)?'], sol: `1 nach rechts, ${Math.abs(m.n)} nach ${m.n > 0 ? 'oben' : 'unten'}: m = ${m.n}`, mistakes: [{ v: -m.n, msg: 'Fällt die Gerade, ist die Steigung negativ.' }] });
+        return N('Wie groß ist die Steigung m? (Das Steigungsdreieck hilft!)', m.n, { vis, mq: '', memOk: false, hints: ['Gehe 1 nach rechts. Wie viel geht es nach oben (+) oder unten (−)?'], sol: `1 nach rechts, ${Math.abs(m.n)} nach ${m.n > 0 ? 'oben' : 'unten'}: m = ${U.fmt(m.n)}`, mistakes: [{ v: -m.n, msg: 'Fällt die Gerade, ist die Steigung negativ.' }] });
       }
       if (l === 2) {
         const t = { q: 'Welche Funktionsgleichung gehört zum Graphen?', vis, memOk: false, hints: ['Lies zuerst b am y-Achsenabschnitt ab, dann die Steigung m.'], sol: `b = ${U.fmt(b)}, m = ${U.ft(m)} → ${eq}` };
@@ -82,7 +82,8 @@
     bp: 'Zahl – Variable – Operation', desc: 'Ausmultiplizieren, binomische Formeln, faktorisieren.',
     gen(l) {
       if (l === 1) {
-        const k = U.rnz(-6, 7), a = U.ri(1, 5), b = U.rnz(-9, 9);
+        let k; do k = U.rnz(-6, 7); while (k === 1);
+        const a = U.ri(1, 5), b = U.rnz(-9, 9);
         const T = `${k === -1 ? '−' : k === 1 ? '' : U.fmt(k)}(${U.lin(a, b)})`;
         const t = { q: `Multipliziere aus: <span class="expr inl">${T}</span>`, mq: T, hints: ['Der Faktor vor der Klammer wird mit JEDEM Glied multipliziert.'], sol: `${T} = ${U.lin(k * a, k * b)}` };
         return U.choice(t, U.lin(k * a, k * b), [{ h: U.lin(k * a, b), msg: 'Auch das zweite Glied muss multipliziert werden!' }, { h: U.lin(k * a, -k * b), msg: 'Vorzeichenfehler beim zweiten Glied.' }, U.lin(k + a, k * b), U.lin(a, k * b)]);
@@ -91,7 +92,7 @@
         const a = U.rnz(-7, 7), b = U.rnz(-7, 7);
         const T = `(${U.lin(1, a)})(${U.lin(1, b)})`;
         const c = U.poly([1, a + b, a * b]);
-        const t = { q: `Multipliziere aus: <span class="expr inl">${T}</span>`, mq: T, hints: ['Jedes Glied der ersten Klammer mit jedem Glied der zweiten multiplizieren.'], sol: `x² + ${U.par(a)}x + ${U.par(b)}x + ${U.par(a)} · ${U.par(b)} = ${c}` };
+        const t = { q: `Multipliziere aus: <span class="expr inl">${T}</span>`, mq: T, hints: ['Jedes Glied der ersten Klammer mit jedem Glied der zweiten multiplizieren.'], sol: `x · x = x²; gemischte Glieder: ${U.lin(a, 0)} ${b < 0 ? '−' : '+'} ${U.lin(Math.abs(b), 0)} = ${U.lin(a + b, 0)}; Zahlen: ${U.par(a)} · ${U.par(b)} = ${U.fmt(a * b)} → <b>${c}</b>` };
         return U.choice(t, c, [{ h: U.poly([1, 0, a * b]), msg: 'Die gemischten Glieder fehlen!' }, { h: U.poly([1, a * b, a + b]), msg: 'Glieder vertauscht.' }, { h: U.poly([1, a + b, -(a * b)]), msg: 'Vorzeichenfehler beim Produkt der Zahlen.' }, U.poly([1, a - b, a * b])]);
       }
       const k = U.ri(0, 2);
@@ -126,13 +127,13 @@
         let a, c; do { a = U.ri(2, 9); c = U.ri(1, 8); } while (a === c);
         const x = U.rnz(-10, 10), b = U.rnz(-15, 15), d = (a - c) * x + b;
         const eq = `${U.lin(a, b)} = ${U.lin(c, d)}`;
-        return N(`Löse die Gleichung: <span class="expr inl">${eq}</span>`, x, { mq: eq, hints: ['Bringe alle x auf eine Seite, alle Zahlen auf die andere.'], sol: `${U.lin(a - c, 0)} = ${d - b} → x = ${x}` });
+        return N(`Löse die Gleichung: <span class="expr inl">${eq}</span>`, x, { mq: eq, hints: ['Bringe alle x auf eine Seite, alle Zahlen auf die andere.'], sol: `| − ${c === 1 ? '' : c}x und − ${U.par(b)}: ${U.lin(a - c, 0)} = ${U.fmt(d - b)}${a - c !== 1 ? ` | : ${U.par(a - c)} → x = ${U.fmt(x)}` : ''}. Probe: ${U.fmt(a * x + b)} = ${U.fmt(c * x + d)} ✔` });
       }
       if (l === 2) {
         let k, c; do { k = U.ri(2, 5); c = U.ri(1, 6); } while (k === c);
         const m = U.rnz(-6, 6), x = U.rnz(-8, 8), d = k * (x - m) - c * x;
         const eq = `${k}(${U.lin(1, -m)}) = ${U.lin(c, d)}`;
-        return N(`Löse die Gleichung: <span class="expr inl">${eq}</span>`, x, { mq: eq, hints: ['Löse zuerst die Klammer auf.'], sol: `${U.lin(k, -k * m)} = ${U.lin(c, d)} → ${U.lin(k - c, 0)} = ${d + k * m} → x = ${x}`, mistakes: [{ v: (d + m) / (k - c), msg: 'Beim Ausmultiplizieren muss auch die Zahl in der Klammer mit ' + k + ' malgenommen werden.' }] });
+        return N(`Löse die Gleichung: <span class="expr inl">${eq}</span>`, x, { mq: eq, hints: ['Löse zuerst die Klammer auf.'], sol: `Klammer auflösen: ${U.lin(k, -k * m)} = ${U.lin(c, d)} → ${U.lin(k - c, 0)} = ${U.fmt(d + k * m)}${k - c !== 1 ? ` → x = ${U.fmt(x)}` : ''}`, mistakes: [{ v: (d + m) / (k - c), msg: 'Beim Ausmultiplizieren muss auch die Zahl in der Klammer mit ' + k + ' malgenommen werden.' }] });
       }
       const kk = U.ri(0, 2);
       if (kk === 0) {
@@ -140,13 +141,13 @@
         const x = U.ri(2, 15), b = U.ri(2, 12), d = (a - c) * x - b;
         if (d <= 0) return this.gen(l);
         const W = ['', '', 'Doppelte', 'Dreifache', 'Vierfache', 'Fünffache', 'Sechsfache', 'Siebenfache'];
-        return N(`Zahlenrätsel: Das ${W[a]} einer Zahl, vermindert um ${b}, ist genauso groß wie das ${W[c]} der Zahl, vermehrt um ${d}. Wie heißt die Zahl?`, x, { hints: ['Nenne die Zahl x und stelle eine Gleichung auf.', `${a}x − ${b} = ${c}x + ${d}`], sol: `${a}x − ${b} = ${c}x + ${d} → ${a - c}x = ${d + b} → x = ${x}` });
+        return N(`Zahlenrätsel: Das ${W[a]} einer Zahl, vermindert um ${b}, ist genauso groß wie das ${W[c]} der Zahl, vermehrt um ${d}. Wie heißt die Zahl?`, x, { hints: ['Nenne die Zahl x und stelle eine Gleichung auf.', `${a}x − ${b} = ${c}x + ${d}`], sol: `${a}x − ${b} = ${c}x + ${d} → ${U.lin(a - c, 0)} = ${d + b}${a - c !== 1 ? ` → x = ${x}` : ''}` });
       }
       if (kk === 1) {
         const [k, j] = U.pick([[3, 2], [4, 2], [5, 3], [4, 3]]);
         const nn = U.ri(2, 8) * (k - j);
         const x = (nn * (j - 1)) / (k - j);
-        return N(`Eine Mutter ist heute ${k}-mal so alt wie ihr Sohn. In ${nn} Jahren ist sie nur noch ${j}-mal so alt wie er. Wie alt ist der Sohn heute?`, x, { unit: 'Jahre', hints: ['Sohn heute: x, Mutter heute: ' + k + 'x. Beide werden ' + nn + ' Jahre älter.', `${k}x + ${nn} = ${j}(x + ${nn})`], sol: `${k}x + ${nn} = ${j}x + ${j * nn} → ${k - j}x = ${(j - 1) * nn} → x = ${x}` });
+        return N(`Eine Mutter ist heute ${k}-mal so alt wie ihr Sohn. In ${nn} Jahren ist sie nur noch ${j}-mal so alt wie er. Wie alt ist der Sohn heute?`, x, { unit: 'Jahre', hints: ['Sohn heute: x, Mutter heute: ' + k + 'x. Beide werden ' + nn + ' Jahre älter.', `${k}x + ${nn} = ${j}(x + ${nn})`], sol: `${k}x + ${nn} = ${j}x + ${j * nn} → ${U.lin(k - j, 0)} = ${(j - 1) * nn}${k - j !== 1 ? ` → x = ${x}` : ''}. Der Sohn ist heute ${x} Jahre alt.` });
       }
       const bb = U.ri(2, 12), dd = U.ri(2, 8), Uu = 2 * (bb + bb + dd);
       return N(`Ein Rechteck ist ${dd} cm länger als breit. Sein Umfang beträgt ${Uu} cm. Wie breit ist es?`, bb, { unit: 'cm', hints: ['Breite: x, Länge: x + ' + dd, `2 · (x + x + ${dd}) = ${Uu}`], sol: `4x + ${2 * dd} = ${Uu} → x = ${bb} cm` });

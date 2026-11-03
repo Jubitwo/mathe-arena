@@ -9,7 +9,7 @@
   const G = (MA.Games = {});
 
   MA.FORMATS = {
-    training: { icon: '🎯', name: 'Training', desc: '10 Aufgaben mit Tipps und Lösungswegen. Sammle bis zu 3 Sterne!', modes: ['solo'] },
+    training: { icon: '🎯', name: 'Training', desc: '10 Aufgaben mit Tipps, Erklärung und zweitem Versuch. Sammle bis zu 3 Sterne!', modes: ['solo'] },
     blitz: { icon: '⚡', name: 'Blitz-Runde', desc: '60 Sekunden – wie viele Aufgaben schaffst du? Serien geben Zeitbonus.', modes: ['solo'] },
     rallye: { icon: '🏎️', name: 'Mathe-Rallye', desc: 'Jede richtige Antwort bringt dein Auto ein Feld weiter. 3 Treffer in Folge = TURBO!', modes: ['solo', 'partner', 'gruppe'] },
     duell: { icon: '⚔️', name: 'Tauzieh-Duell', desc: 'Zwei gegeneinander auf einem Gerät – gleichzeitig! Wer richtig rechnet, zieht am Seil.', modes: ['partner'] },
@@ -45,7 +45,8 @@
     start(c) {
       const next = MA.taskSource(c.topic, c.level);
       const N = 10;
-      let i = 0, right = 0, score = 0, streak = 0, w = null, alive = true;
+      let i = 0, right = 0, firstTry = 0, score = 0, streak = 0, w = null, alive = true;
+      const STREAK = { 3: '🔥 3er-Serie! Ab jetzt +5 Bonuspunkte', 5: '⚡ 5er-Serie – du bist on fire!', 7: '🚀 7 in Folge – unaufhaltbar!', 10: '👑 10 von 10 in Folge – Legende!' };
       const hud = () => c.hud(`<span>Aufgabe <b>${Math.min(i, N)}/${N}</b></span><span>Punkte <b>${score}</b></span><span class="streak ${streak >= 3 ? 'hot' : ''}">🔥 ${streak}</span>`);
       const step = () => {
         if (!alive) return;
@@ -55,33 +56,49 @@
         c.el.innerHTML = `<div class="progress"><div style="width:${((i - 1) / N) * 100}%"></div></div><div class="stage"></div>`;
         const st = c.el.querySelector('.stage');
         const t = next();
-        let hints = 0;
-        w = MA.renderTask(st, t, {
+        let hints = 0, attempt = 1, wrongChoice = [];
+        const opts = {
           hints: true, onHint: (n) => (hints = n),
           onAnswer(r) {
-            w.lock(); w.markChoice(r);
+            w.lock();
+            // Erster Fehlversuch: nicht gleich die Lösung zeigen, sondern Tipp + zweiter Versuch
+            if (!r.ok && attempt === 1) {
+              attempt = 2; streak = 0; MA.Sound.bad(); hud();
+              if (t.type === 'choice') wrongChoice.push(r.given);
+              w.destroy();
+              w = MA.renderTask(st, t, Object.assign({}, opts, { showHints: Math.max(1, hints), disable: wrongChoice }));
+              st.insertAdjacentHTML('afterbegin', `<div class="fb fb-try"><div class="fb-head">🤔 Noch nicht ganz – du hast einen zweiten Versuch!</div>${r.msg ? `<div class="fb-msg">⚠️ ${r.msg}</div>` : ''}<div class="fb-hint-line">Lies den Tipp unten${MA.LEARN && MA.LEARN[t.topicId] ? ' oder schau in „📖 So geht\'s“' : ''} und probier es nochmal.</div></div>`);
+              return;
+            }
+            w.markChoice(r);
             let pts = 0;
             if (r.ok) {
               right++; streak++;
-              pts = Math.max(4, 10 - hints * 3) + (streak >= 3 ? 5 : 0);
+              if (attempt === 1) firstTry++; else MA.Store.badge('zweiter');
+              pts = attempt === 2 ? 3 : Math.max(4, 10 - hints * 3) + (streak >= 3 ? 5 : 0);
               score += pts; MA.Sound.ok();
+              if (STREAK[streak]) MA.toast(STREAK[streak], 1800);
               if (streak >= 8) MA.Store.badge('streak');
             } else { streak = 0; MA.Sound.bad(); }
             hud();
-            MA.feedback(st, t, r, { onNext: step, points: pts, auto: r.ok ? 1100 : 0 });
+            const tryBox = st.querySelector('.fb-try'); if (tryBox) tryBox.remove();
+            MA.feedback(st, t, r, { onNext: step, points: pts, auto: r.ok ? (attempt === 2 ? 2200 : 1100) : 0, showSol: r.ok && attempt === 2 });
           },
-        });
+        };
+        w = MA.renderTask(st, t, opts);
       };
       const finish = () => {
         if (w) w.destroy();
-        const stars = right >= 9 ? 3 : right >= 7 ? 2 : right >= 5 ? 1 : 0;
+        // Sterne: Treffer im zweiten Versuch zählen halb
+        const val = firstTry + (right - firstTry) * 0.5;
+        const stars = val >= 9 ? 3 : val >= 7 ? 2 : val >= 5 ? 1 : 0;
         const rec = MA.Store.setStars(c.topic.id, c.level, stars);
-        if (right === N) MA.Store.badge('perfect');
+        if (firstTry === N) MA.Store.badge('perfect');
         if (c.level === 3 && stars === 3) MA.Store.badge('eprofi');
         MA.result(c, {
           title: stars === 3 ? 'MEGA!' : stars === 2 ? 'STARK!' : stars === 1 ? 'GUT GEMACHT!' : 'WEITER ÜBEN!',
           emoji: ['💪', '🙂', '😎', '🏆'][stars], stars, record: rec && stars > 0,
-          lines: [`<b>${right} von ${N}</b> richtig`, `${score} Punkte`, stars < 3 ? `Für ${stars + 1} Sterne brauchst du ${[5, 7, 9][stars]} richtige.` : 'Probier doch mal die nächste Stufe!'],
+          lines: [`<b>${right} von ${N}</b> richtig${right > firstTry ? ` (davon ${right - firstTry} im 2. Versuch)` : ''}`, `${score} Punkte`, stars < 3 ? `Für ${stars + 1} Sterne brauchst du ${[5, 7, 9][stars]} Punkte (1. Versuch = 1, 2. Versuch = ½).` : c.level < 3 ? 'Stark! Probier doch mal die nächste Stufe!' : 'Höchststufe gemeistert – Respekt!'],
           xp: score,
         });
       };
@@ -145,6 +162,8 @@
         if (w) w.destroy();
         const rec = MA.Store.setBest(c.topic.id, c.level, 'blitz', score);
         if (score >= 15) MA.Store.badge('blitz15');
+        const dc = MA.daily();
+        if (dc.topic.id === c.topic.id && score >= 10) { MA.Store.data.dailyDone = dc.key; MA.Store.save(); MA.Store.badge('tages'); if (MA.Store.data.badges.includes('tages')) MA.toast('📅 Tages-Challenge geschafft!', 2500); }
         const best = MA.Store.rec(c.topic.id, c.level).blitz;
         MA.result(c, { title: 'ZEIT UM!', emoji: '⚡', record: rec && score > 0, win: rec && score > 0, lines: [`<b>${score}</b> Treffer in 60 Sekunden`, `${wrong} Fehler`, `Dein Rekord: <b>${best}</b>`], xp: score * 6 });
       };
@@ -209,6 +228,16 @@
           if (left <= 0) { clearInterval(timerIv); onEnd(); }
         }, 100);
       };
+      const ROBO = {
+        ahead: ['Beep-boop! Ich bin vorne! 😎', 'Robo-Turbo aktiviert! 🔋', 'Schneller rechnen, Mensch! 🤖'],
+        behind: ['Hey, nicht so schnell! 😵', 'Meine Schaltkreise glühen … 🔥', 'Du rechnest ja wie ein Supercomputer! 🖥️'],
+      };
+      const roboSay = (k) => {
+        const el = banner.querySelector('.robo-say');
+        if (!el || Math.random() < 0.4) return;
+        el.textContent = '🤖 ' + U.pick(ROBO[k]);
+        el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+      };
       /* --- Solo: gegen Robo --- */
       if (cpu) {
         const speed = { slow: 20, mid: 14, fast: 9 }[o.cpu || 'mid'];
@@ -218,7 +247,7 @@
           acc += 0.25;
           const car = c.el.querySelector('.car[data-i="1"]');
           car && car.style.setProperty('--wobble', (acc / speed).toFixed(2));
-          if (acc >= speed) { acc = 0; move(1, 1); MA.Sound.tick(); }
+          if (acc >= speed) { acc = 0; move(1, 1); MA.Sound.tick(); roboSay(pos[1] > pos[0] ? 'ahead' : 'behind'); }
         }, 250);
       }
       const askTeam = () => {
@@ -227,7 +256,8 @@
         const cur = cpu ? 0 : turn % teams.length;
         const team = teams[cur];
         banner.style.setProperty('--c', team.color);
-        banner.innerHTML = cpu ? `<span>Rechne schneller als Robo! 🤖</span>` : `<span>🚗 <b>${MA.esc(team.name)}</b> ist dran!</span>${o.timer ? '<div class="turn-timer-wrap"><div class="turn-timer"></div></div>' : ''}`;
+        if (cpu && banner.querySelector('.robo-say')) { /* Banner bleibt, Robo-Sprechblase behalten */ } else
+        banner.innerHTML = cpu ? `<span>Rechne schneller als Robo! 🤖</span> <span class="robo-say"></span>` : `<span>🚗 <b>${MA.esc(team.name)}</b> ist dran!</span>${o.timer ? '<div class="turn-timer-wrap"><div class="turn-timer"></div></div>' : ''}`;
         const t = next();
         paused = false;
         const answered = (r) => {
@@ -238,6 +268,7 @@
             let n = 1;
             if (strk[cur] % 3 === 0) { n = 2; MA.toast(`🔥 TURBO für ${MA.esc(team.name)}! +2 Felder`, 1600); MA.Sound.boost(); } else MA.Sound.ok();
             move(cur, n);
+            if (cpu) roboSay(pos[0] > pos[1] ? 'behind' : 'ahead');
           } else { strk[cur] = 0; MA.Sound.bad(); paused = true; }
           turn++;
           if (!over) MA.feedback(st, t, r, { onNext: askTeam, auto: r.ok ? 1200 : 0, nextLabel: cpu ? 'Weiter ▶' : `Weiter: ${MA.esc(teams[turn % teams.length].name)} ▶` });
@@ -357,10 +388,11 @@
       let cur = 0, moves = 0, open = [], found = 0, busy = false, alive = true;
       const t0 = performance.now();
       const cards = U.shuffle(pairs.flatMap((p, i) => [{ i, html: p.q, kind: 'q' }, { i, html: p.a, kind: 'a' }]));
-      c.el.innerHTML = `<div class="memory">${players.length > 1 ? `<div class="mem-players">${players.map((p, i) => `<div class="mem-p" data-i="${i}" style="--c:${p.color}">${MA.esc(p.name)}: <b>0</b></div>`).join('')}</div>` : ''}<div class="mem-grid n${cards.length}">${cards.map((cd, k) => `<button type="button" class="mcard" data-k="${k}"><div class="mc-inner"><div class="mc-front"><span>?</span></div><div class="mc-back ${cd.kind}">${cd.html}</div></div></button>`).join('')}</div></div>`;
+      c.el.innerHTML = `<div class="memory">${players.length > 1 ? `<div class="mem-players">${players.map((p, i) => `<div class="mem-p" data-i="${i}" style="--c:${p.color}">${MA.esc(p.name)}: <b>0</b></div>`).join('')}</div>` : ''}<div class="mem-grid n${cards.length}">${cards.map((cd, k) => `<div class="mcard" role="button" tabindex="0" aria-label="Karte ${k + 1}" data-k="${k}"><div class="mc-inner"><div class="mc-front"><span>?</span></div><div class="mc-back ${cd.kind}">${cd.html}</div></div></div>`).join('')}</div></div>`;
       const hud = () => c.hud(players.length > 1 ? `<span>Am Zug: <b style="color:${players[cur].color}">${MA.esc(players[cur].name)}</b></span><span>Paare ${found}/${pairs.length}</span>` : `<span>Züge <b>${moves}</b></span><span>Paare <b>${found}/${pairs.length}</b></span>`);
       const markCur = () => c.el.querySelectorAll('.mem-p').forEach((e, i) => { e.classList.toggle('cur', i === cur); e.querySelector('b').textContent = pts[i]; });
       const els = c.el.querySelectorAll('.mcard');
+      els.forEach((el) => el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); } }));
       els.forEach((el) => el.addEventListener('click', () => {
         if (busy || !alive) return;
         const k = +el.dataset.k;

@@ -552,3 +552,126 @@ body[data-screen='start'] .brand { visibility: hidden; }
   .lock { min-width: 0; padding: 0.25rem 0.35rem; }
   .lock .lk { font-size: 1.15rem; }
 }
+
+/* =========================================================
+   Version 2 – Lernkarten, zweiter Versuch, Handy-Optimierung
+   ========================================================= */
+
+/* ---------- Lernkarten „So geht's" ---------- */
+.learn { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+@media (max-width: 700px) { .learn { grid-template-columns: 1fr; } }
+.lc { border-radius: 12px; padding: 0.7rem 0.9rem; border: 2px solid var(--line); background: rgba(255, 255, 255, 0.04); line-height: 1.5; }
+.lc-h { font-weight: 800; margin-bottom: 0.3rem; }
+.lc ol { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.25rem; }
+.lc-merke { border-color: var(--yellow); background: rgba(255, 230, 0, 0.07); grid-column: 1 / -1; font-size: 1.05rem; }
+.lc-merke .lc-h { color: var(--yellow); }
+.lc-steps .lc-h { color: var(--cyan); }
+.lc-ex { border-color: rgba(57, 255, 136, 0.6); }
+.lc-ex .lc-h { color: var(--green); }
+.lc-err { border-color: rgba(255, 56, 96, 0.6); }
+.lc-err .lc-h { color: var(--red); }
+.learn-panel { margin-bottom: 1rem; }
+.learn-panel summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.learn-panel summary::-webkit-details-marker { display: none; }
+.learn-panel summary .pixel { color: var(--yellow); font-size: 0.95rem; text-shadow: 0 0 6px rgba(255, 230, 0, 0.6); }
+.learn-panel summary::after { content: '▼'; margin-left: auto; color: var(--muted); transition: transform 0.2s; }
+.learn-panel[open] summary::after { transform: rotate(180deg); }
+.learn-panel[open] summary { margin-bottom: 0.8rem; }
+.learn-sub { color: var(--muted); font-size: 0.9rem; }
+.mixinfo { color: var(--muted); }
+.modal { position: fixed; inset: 0; z-index: 95; background: rgba(4, 3, 20, 0.82); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: flex; align-items: flex-start; justify-content: center; padding: 1rem; overflow-y: auto; animation: screenIn 0.2s; }
+.modal-box { width: min(820px, 100%); background: var(--bg2); border: 3px solid var(--yellow); border-radius: var(--radius); padding: 1rem; box-shadow: 0 0 40px rgba(255, 230, 0, 0.3); display: grid; gap: 0.8rem; margin: auto 0; }
+.modal-head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+.modal-head .ph { margin: 0; }
+.modal-ok { --c: var(--green); justify-self: center; }
+.hint-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.btn-learn { border-color: rgba(0, 240, 255, 0.6) !important; color: var(--cyan) !important; background: rgba(0, 240, 255, 0.08) !important; }
+.btn-learn-top { font-size: 1.1rem; }
+.link-btn { background: none; border: none; color: var(--cyan); text-decoration: underline; font-weight: 700; padding: 0 0.2rem; }
+
+/* ---------- Rückmeldungen ---------- */
+.fb-try { border-color: var(--orange); background: rgba(255, 159, 28, 0.1); box-shadow: 0 0 20px rgba(255, 159, 28, 0.3); margin: 0 0 0.8rem; }
+.fb-try .fb-head { color: var(--orange); font-size: 1.15rem; }
+.fb-hint-line { margin-top: 0.3rem; color: var(--muted); }
+.fb-merke { margin-top: 0.6rem; padding: 0.5rem 0.7rem; border-left: 4px solid var(--yellow); background: rgba(255, 230, 0, 0.06); border-radius: 6px; }
+.fb { scroll-margin-bottom: 150px; }
+.choice:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ---------- Tages-Challenge ---------- */
+.daily { display: flex; align-items: center; gap: 0.8rem; margin: 0 auto 1.2rem; max-width: 760px; padding: 0.8rem 1rem; border-radius: var(--radius); border: 3px dashed var(--yellow); background: rgba(255, 230, 0, 0.07); color: var(--text); text-decoration: none; box-shadow: 0 0 18px rgba(255, 230, 0, 0.25); }
+.daily:hover { box-shadow: 0 0 28px rgba(255, 230, 0, 0.5); }
+.daily-ic { font-size: 2rem; }
+.daily-tx { flex: 1; }
+.daily-tx .pixel { color: var(--yellow); font-size: 0.85rem; }
+.daily-go { color: var(--yellow); animation: blink 1.1s steps(2) infinite; font-size: 0.8rem; }
+.daily-ok { color: var(--green); font-size: 1.6rem; }
+
+/* ---------- Robo-Sprechblase ---------- */
+.robo-say { display: inline-block; margin-left: 0.4rem; color: var(--pink); font-weight: 700; }
+.robo-say.pop { animation: pop 0.35s; }
+
+/* ---------- Fallback für ältere iPads (ohne color-mix) ---------- */
+@supports not (color: color-mix(in srgb, red 50%, blue)) {
+  .btn { box-shadow: 0 5px 0 rgba(0, 0, 0, 0.55), 0 0 12px rgba(0, 240, 255, 0.3); }
+  .gcard { background: linear-gradient(160deg, var(--panel2), var(--bg2)); box-shadow: 0 0 18px rgba(0, 240, 255, 0.25); }
+  .gcard:hover, .tcard:hover { box-shadow: 0 0 24px rgba(0, 240, 255, 0.4); }
+  .hud > span { box-shadow: none; }
+  .turn-banner { background: rgba(255, 255, 255, 0.06); box-shadow: none; }
+  .side { background: rgba(255, 255, 255, 0.04); box-shadow: none; }
+}
+
+/* ---------- Handy: Spielbildschirm kompakt ---------- */
+@media (max-width: 600px) {
+  body[data-screen='spiel'] .topbar { display: none; }
+  body[data-screen='spiel'] #app { padding-top: 0.5rem; }
+  .game-top { gap: 0.4rem; margin-bottom: 0.5rem; }
+  .game-title { min-width: 0; flex: 1 1 0; }
+  .gt-name { font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gt-icon { font-size: 1.3rem; }
+  .hud { width: 100%; gap: 0.3rem; }
+  .hud > span { font-size: 0.82rem; padding: 0.15rem 0.5rem; }
+  .key { padding: 0.5rem 0; font-size: 1.25rem; }
+  .ans-display { min-height: 2.8rem; font-size: 1.6rem; }
+  .task-hintbox .btn-hint { font-size: 0.9rem; }
+  .modal { padding: 0.5rem; }
+  .modal-box { padding: 0.8rem; }
+
+  /* Rallye: Rennbahn klebt unten, damit man sie immer sieht */
+  .rallye .track { position: sticky; bottom: 0; z-index: 6; padding: 0.35rem; gap: 3px; box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.7); }
+  .rallye .lane { grid-template-columns: 3.6rem 1fr; gap: 0.3rem; }
+  .rallye .lane-name { font-size: 0.72rem; }
+  .rallye .road { height: 26px; }
+  .rallye.many .road { height: 20px; }
+  .rallye .car, .rallye.many .car { width: 38px; top: 1px; left: calc(var(--f) * (100% - 58px)); }
+  .rallye.many .car { width: 30px; }
+  .rallye .lane-pos { display: none; }
+  .rallye .finish { width: 14px; background-size: 7px 7px; }
+  .turn-banner { font-size: 1rem; padding: 0.4rem 0.6rem; }
+
+  /* Duell: beide Hälften passen auf einen Bildschirm */
+  .duell { gap: 0.35rem; }
+  .duell .side { padding: 0.3rem; }
+  .duell .side-head { font-size: 0.85rem; margin-bottom: 0.15rem; }
+  .duell .side .task { padding: 0.4rem; gap: 0.3rem; }
+  .duell .side .task-q { font-size: 0.92rem; }
+  .duell .side .expr { font-size: 1.25rem; padding: 0; }
+  .duell .side .task-svg { max-height: 105px; }
+  .duell .ans-display { min-height: 2rem; font-size: 1.2rem; border-width: 2px; }
+  .duell .keypad { grid-template-columns: repeat(4, 1fr); gap: 0.22rem; max-width: none;
+    grid-template-areas: 'k7 k8 k9 kdel' 'k4 k5 k6 kneg' 'k1 k2 k3 kcom' 'k0 kfr kok kok'; }
+  .duell .key { padding: 0.28rem 0; font-size: 1rem; box-shadow: 0 2px 0 #0a0830; }
+  .duell .key[data-k='7'] { grid-area: k7; } .duell .key[data-k='8'] { grid-area: k8; } .duell .key[data-k='9'] { grid-area: k9; }
+  .duell .key[data-k='4'] { grid-area: k4; } .duell .key[data-k='5'] { grid-area: k5; } .duell .key[data-k='6'] { grid-area: k6; }
+  .duell .key[data-k='1'] { grid-area: k1; } .duell .key[data-k='2'] { grid-area: k2; } .duell .key[data-k='3'] { grid-area: k3; }
+  .duell .key[data-k='0'] { grid-area: k0; } .duell .key[data-k='-'] { grid-area: kneg; } .duell .key[data-k=','] { grid-area: kcom; }
+  .duell .key[data-k='del'] { grid-area: kdel; } .duell .key[data-k='/'] { grid-area: kfr; } .duell .key[data-k='ok'] { grid-area: kok; }
+  .duell .choice { padding: 0.35rem 0.5rem; font-size: 0.9rem; }
+  .duell .rope-end { font-size: 0.75rem; }
+  .duell .fb { padding: 0.4rem 0.6rem; margin-top: 0.3rem; }
+  .duell .fb-head { font-size: 1rem; }
+  .duell .fb-sol { display: none; }
+  body[data-screen='spiel'] .game-body .duell ~ * { display: none; }
+}
+.duell .fb-merke { display: none; }
+@media (max-width: 600px) { [data-format='duell'] .hud { display: none; } }
+.lc-err { grid-column: 1 / -1; }

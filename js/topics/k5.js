@@ -15,20 +15,25 @@
       let a, b, c, d, e, ans, sol, hint, mist = [];
       if (l < 3) {
         const op = U.ri(0, 3);
+        const place = l === 1 ? 10 : 100;
+        const big = (v) => v - (v % place), small = (v) => v % place;
         if (op === 0) {
           a = l === 1 ? U.ri(12, 58) : U.ri(120, 880); b = l === 1 ? U.ri(5, 39) : U.ri(45, 480);
-          e = `${U.fmt(a, 0)} + ${U.fmt(b, 0)}`; ans = a + b; hint = 'Zerlege eine Zahl: erst die Zehner (bzw. Hunderter) dazu, dann die Einer.';
+          e = `${U.fmt(a, 0)} + ${U.fmt(b, 0)}`; ans = a + b; hint = 'Zerlege eine Zahl: erst die Zehner (bzw. Hunderter) dazu, dann den Rest.';
+          sol = big(b) && small(b) ? `Zerlegen: ${b} = ${big(b)} + ${small(b)}. ${a} + ${big(b)} = ${a + big(b)}, dann ${a + big(b)} + ${small(b)} = ${ans}` : `${e} = ${ans}`;
         } else if (op === 1) {
           a = l === 1 ? U.ri(30, 99) : U.ri(300, 999); b = l === 1 ? U.ri(6, a - 10) : U.ri(60, a - 50);
-          e = `${a} − ${b}`; ans = a - b; hint = 'Ziehe schrittweise ab: erst die Zehner, dann die Einer.';
+          e = `${a} − ${b}`; ans = a - b; hint = 'Ziehe schrittweise ab: erst die Zehner (bzw. Hunderter), dann den Rest.';
+          sol = big(b) && small(b) ? `Zerlegen: ${b} = ${big(b)} + ${small(b)}. ${a} − ${big(b)} = ${a - big(b)}, dann ${a - big(b)} − ${small(b)} = ${ans}. Probe: ${ans} + ${b} = ${a} ✔` : `${e} = ${ans}. Probe: ${ans} + ${b} = ${a} ✔`;
         } else if (op === 2) {
           a = l === 1 ? U.ri(2, 10) : U.ri(12, 25); b = l === 1 ? U.ri(2, 10) : U.ri(3, 9);
-          e = `${a} · ${b}`; ans = a * b; hint = l === 1 ? 'Denk an das Einmaleins!' : `Zerlege: ${a} · ${b} = ${Math.floor(a / 10) * 10} · ${b} + ${a % 10} · ${b}`;
+          e = `${a} · ${b}`; ans = a * b; hint = l === 1 ? 'Denk an das Einmaleins! Du kannst auch von einer bekannten Aufgabe aus weiterrechnen.' : `Zerlege: ${a} · ${b} = ${Math.floor(a / 10) * 10} · ${b} + ${a % 10} · ${b}`;
+          sol = l === 1 ? `${e} = ${ans} (Einmaleins: ${b}er-Reihe)` : `${Math.floor(a / 10) * 10} · ${b} = ${Math.floor(a / 10) * 10 * b} und ${a % 10} · ${b} = ${(a % 10) * b}. Zusammen: ${ans}`;
         } else {
           b = l === 1 ? U.ri(2, 10) : U.ri(3, 9); c = l === 1 ? U.ri(2, 10) : U.ri(12, 40); a = b * c;
           e = `${a} : ${b}`; ans = c; hint = `Welche Zahl mal ${b} ergibt ${a}?`;
+          sol = `${e} = ${c}, denn ${c} · ${b} = ${a} (Probe mit der Umkehraufgabe).`;
         }
-        sol = `${e} = ${U.fmt(ans, 0)}`;
       } else {
         const f = U.ri(0, 3);
         if (f === 0) {
@@ -204,7 +209,8 @@
       const mist = [];
       const fl = Math.floor(n / p) * p, ce = Math.ceil(n / p) * p;
       [fl, ce].forEach((v) => { if (v !== ans) mist.push({ v, msg: 'Schau auf die Ziffer rechts von der Rundungsstelle: 0–4 abrunden, 5–9 aufrunden.' }); });
-      return N(`Runde <b>${U.fmt(n, 0)}</b> auf <b>${PLACE[p]}</b>.`, ans, { mq: `${U.fmt(n, 0)} ≈ ? (${PLACE[p]})`, hints: [`Welche Ziffer steht rechts neben der ${PLACE[p]}-Stelle?`], sol: `${U.fmt(n, 0)} ≈ ${U.fmt(ans, 0)}`, mistakes: mist });
+      const dg = Math.floor(n / (p / 10)) % 10;
+      return N(`Runde <b>${U.fmt(n, 0)}</b> auf <b>${PLACE[p]}</b>.`, ans, { mq: `${U.fmt(n, 0)} ≈ ? (${PLACE[p]})`, hints: [`Welche Ziffer steht rechts neben der ${PLACE[p]}-Stelle?`, '0–4: abrunden, 5–9: aufrunden.'], sol: `Rechts neben der ${PLACE[p]}-Stelle steht eine <b>${dg}</b> → ${dg >= 5 ? 'aufrunden' : 'abrunden'}: ${U.fmt(n, 0)} ≈ ${U.fmt(ans, 0)}`, mistakes: mist });
     },
   });
 
@@ -265,7 +271,9 @@
       const wr = [];
       while (wr.length < 6) { const x = U.ri(lo, hi); if (x % d !== 0 && !wr.includes(x)) wr.push(x); }
       if (d === 9 || d === 6) { const x = c + 3; if (x % d !== 0) wr.unshift(x); }
-      const t = { q: `Welche Zahl ist durch <b class="hl">${d}</b> teilbar?`, hints: [`Regel: ${RULE[d]}`], sol: `${c} : ${d} = ${c / d}. Regel: ${RULE[d]}`, memOk: false };
+      const qs = String(c).split('').map(Number);
+      const extra = [3, 6, 9].includes(d) ? ` Quersumme von ${c}: ${qs.join(' + ')} = ${qs.reduce((x, y) => x + y, 0)}.` : '';
+      const t = { q: `Welche Zahl ist durch <b class="hl">${d}</b> teilbar?`, hints: [`Regel: ${RULE[d]}`], sol: `${c} : ${d} = ${c / d}. Regel: ${RULE[d]}${extra}`, memOk: false };
       return U.choice(t, String(c), wr.map(String));
     },
   });

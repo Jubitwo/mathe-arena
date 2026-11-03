@@ -112,11 +112,11 @@
         let d, xt, yt, e;
         do { d = U.ri(-3, 3); xt = U.ri(-5, 5); yt = U.ri(-2, 7); e = yt - (xt - d) ** 2; } while (xt === d || e < -6 || e > 7);
         const vis = P.wrap(U.line(P.X(d), P.Y(-6), P.X(d), P.Y(8), 'sv-dash') + `<text x="${P.X(xt)}" y="${P.Y(yt) + 9}" class="sv-target">🎯</text>` + U.t(P.X(xt) + 14, P.Y(yt) - 10, `T(${U.fmt(xt)}|${U.fmt(yt)})`, 'sv-lbl') + U.t(P.X(d) + 4, P.Y(-6) - 6, `x = ${U.fmt(d)}`, 'sv-ax'));
-        return N(`Eine nach oben geöffnete Normalparabel hat ihren Scheitel auf der Linie x = ${U.fmt(d)}. Wie groß muss e sein (S(${U.fmt(d)}|e)), damit sie das Ziel T trifft?`, e, { vis, memOk: false, hints: [`Setze T in y = (x − ${U.par(d)})² + e ein.`], sol: `${yt} = (${xt} − ${U.par(d)})² + e = ${(xt - d) ** 2} + e → e = ${e}`, mistakes: [{ v: yt + (xt - d) ** 2, msg: 'Fast – du musst (x − d)² abziehen, nicht addieren.' }] });
+        return N(`Eine nach oben geöffnete Normalparabel hat ihren Scheitel auf der Linie x = ${U.fmt(d)}. Wie groß muss e sein (S(${U.fmt(d)}|e)), damit sie das Ziel T trifft?`, e, { vis, memOk: false, hints: [`Setze T in y = (x − ${U.par(d)})² + e ein.`], sol: `T einsetzen: ${U.fmt(yt)} = (${U.fmt(xt)} − ${U.par(d)})² + e = ${(xt - d) ** 2} + e → e = ${U.fmt(e)}`, mistakes: [{ v: yt + (xt - d) ** 2, msg: 'Fast – du musst (x − d)² abziehen, nicht addieren.' }] });
       }
       const d = U.ri(-2, 2), k = U.ri(1, 4);
       const vis = P.wrap(P.curve((x) => (x - d) ** 2 - k * k, 'sv-c2 thick'));
-      return N(`Bestimme die <b>größere Nullstelle</b> von <span class="expr inl">${sform(1, d, -k * k)}</span>.`, d + k, { vis, mq: `${sform(1, d, -k * k)}: größere Nullstelle`, hints: ['Setze y = 0: (x − d)² = ' + k * k], sol: `(x − ${U.par(d)})² = ${k * k} → x − ${U.par(d)} = ±${k} → x = ${d - k} oder x = ${d + k}`, mistakes: [{ v: d - k, msg: 'Das ist die kleinere Nullstelle.' }] });
+      return N(`Bestimme die <b>größere Nullstelle</b> von <span class="expr inl">${sform(1, d, -k * k)}</span>.`, d + k, { vis, mq: `${sform(1, d, -k * k)}: größere Nullstelle`, hints: ['Setze y = 0: (x − d)² = ' + k * k], sol: `y = 0: (${U.lin(1, -d)})² = ${k * k} → ${U.lin(1, -d)} = ±${k} → x = ${U.fmt(d - k)} oder x = ${U.fmt(d + k)}`, mistakes: [{ v: d - k, msg: 'Das ist die kleinere Nullstelle.' }] });
     },
   });
 
@@ -128,7 +128,7 @@
       if (l === 1) {
         const x = U.ri(1, 10), y = U.ri(1, 10);
         const t = { q: `Löse das Gleichungssystem:<div class="sys"><span>x + y = ${x + y}</span><span>x − y = ${U.fmt(x - y)}</span></div>`, mq: `x + y = ${x + y}; x − y = ${U.fmt(x - y)}`, hints: ['Addiere beide Gleichungen – dann fällt y weg.'], sol: `2x = ${2 * x} → x = ${x}; y = ${x + y} − ${x} = ${y}` };
-        return U.choice(t, `x = ${x}; y = ${y}`, [x !== y ? { h: `x = ${y}; y = ${x}`, msg: 'Setze zur Probe in die zweite Gleichung ein!' } : `x = ${x + 1}; y = ${y - 1}`, `x = ${x}; y = ${-y}`, `x = ${x + y}; y = ${Math.abs(x - y)}`, `x = ${x - 1}; y = ${y + 1}`]);
+        return U.choice(t, `x = ${x}; y = ${y}`, [x !== y ? { h: `x = ${y}; y = ${x}`, msg: 'Setze zur Probe in die zweite Gleichung ein!' } : `x = ${x + 1}; y = ${y - 1}`, `x = ${x}; y = ${U.fmt(-y)}`, `x = ${x + y}; y = ${Math.abs(x - y)}`, `x = ${x - 1}; y = ${y + 1}`]);
       }
       if (l === 2) {
         let x0, y0, m1, m2, b1, b2;
@@ -158,7 +158,6 @@
     else s += U.line(120, 120, 120 + 95 * Math.cos(-0.5), 120 + 95 * Math.sin(-0.5), 'sv-c2') + U.t(185, 108, label, 'sv-t');
     return U.svg(240, 240, s);
   }
-  const tolR = (v) => Math.max(0.06, v * 0.003);
   R({
     id: 'k9-kreis', icon: '⭕', title: 'Kreis-Werkstatt', tags: ['visuell'],
     bp: 'Messen', desc: 'Umfang und Fläche von Kreisen – mit π.',
@@ -167,12 +166,12 @@
       if (l === 1) {
         const diam = U.chance(0.4);
         const u = 2 * Math.PI * r;
-        return N('Berechne den <b>Umfang</b> des Kreises.' + RND, u, { unit: 'cm', tol: tolR(u), vis: circle(r, diam ? `d = ${2 * r} cm` : `r = ${r} cm`, diam), memOk: false, hints: ['u = 2 · π · r = π · d'], sol: `u = 2 · π · ${r} ≈ ${U.fmt(u, 1)} cm`, mistakes: [{ v: Math.PI * r * r, msg: 'Das ist die Fläche!' }] });
+        return N('Berechne den <b>Umfang</b> des Kreises.' + RND, u, { unit: 'cm', tol: 0.06, alts: [2 * 3.14 * r], vis: circle(r, diam ? `d = ${2 * r} cm` : `r = ${r} cm`, diam), memOk: false, hints: ['u = 2 · π · r = π · d'], sol: `u = 2 · π · ${r} ≈ ${U.fmt(u, 1)} cm`, mistakes: [{ v: Math.PI * r * r, msg: 'Das ist die Fläche!' }] });
       }
       if (l === 2) {
         const diam = U.chance(0.4);
         const A = Math.PI * r * r;
-        return N('Berechne den <b>Flächeninhalt</b> des Kreises.' + RND, A, { unit: 'cm²', tol: tolR(A), vis: circle(r, diam ? `d = ${2 * r} cm` : `r = ${r} cm`, diam), memOk: false, hints: ['A = π · r²' + (diam ? ' – Achtung: Erst den Radius bestimmen!' : '')], sol: `A = π · ${r}² ≈ ${U.fmt(A, 1)} cm²`, mistakes: [{ v: Math.PI * 4 * r * r, msg: 'Du hast mit dem Durchmesser gerechnet – nimm den Radius!' }, { v: 2 * Math.PI * r, msg: 'Das ist der Umfang!' }] });
+        return N('Berechne den <b>Flächeninhalt</b> des Kreises.' + RND, A, { unit: 'cm²', tol: 0.06, alts: [3.14 * r * r], vis: circle(r, diam ? `d = ${2 * r} cm` : `r = ${r} cm`, diam), memOk: false, hints: ['A = π · r²' + (diam ? ' – Achtung: Erst den Radius bestimmen!' : '')], sol: `A = π · ${r}² ≈ ${U.fmt(A, 1)} cm²`, mistakes: [{ v: Math.PI * 4 * r * r, msg: 'Du hast mit dem Durchmesser gerechnet – nimm den Radius!' }, { v: 2 * Math.PI * r, msg: 'Das ist der Umfang!' }] });
       }
       const k = U.ri(0, 2);
       if (k === 0) {
@@ -183,12 +182,12 @@
         const R2 = r + U.ri(1, 5);
         const A = Math.PI * (R2 * R2 - r * r);
         const vis = U.svg(240, 240, `<circle cx="120" cy="120" r="100" class="sv-shape"/><circle cx="120" cy="120" r="${(100 * r) / R2}" class="sv-hole"/>` + U.t(120, 26, `R = ${R2} cm`, 'sv-t sv-mid') + U.t(120, 125, `r = ${r} cm`, 'sv-t sv-mid'));
-        return N('Berechne die Fläche des <b>Kreisrings</b>.' + RND, A, { unit: 'cm²', tol: tolR(A), vis, memOk: false, hints: ['Großer Kreis minus kleiner Kreis.'], sol: `A = π · (${R2}² − ${r}²) ≈ ${U.fmt(A, 1)} cm²` });
+        return N('Berechne die Fläche des <b>Kreisrings</b>.' + RND, A, { unit: 'cm²', tol: 0.06, alts: [3.14 * (R2 * R2 - r * r)], vis, memOk: false, hints: ['Großer Kreis minus kleiner Kreis.'], sol: `A = π · (${R2}² − ${r}²) ≈ ${U.fmt(A, 1)} cm²` });
       }
       const al = U.pick([30, 45, 60, 90, 120, 135, 150, 270]);
       const A = (al / 360) * Math.PI * r * r;
       const vis = U.svg(240, 240, `<circle cx="120" cy="120" r="95" class="sv-shape2"/><path d="${U.sector(120, 120, 95, 0, al)}" class="sv-shape"/>` + U.t(120 + 30 * Math.sin((al / 2) * Math.PI / 180), 125 - 30 * Math.cos((al / 2) * Math.PI / 180), `${al}°`, 'sv-t sv-mid sv-acc') + U.t(100, 230, `r = ${r} cm`, 'sv-t sv-mid'));
-      return N('Berechne die Fläche des <b>Kreisausschnitts</b>.' + RND, A, { unit: 'cm²', tol: tolR(A), vis, memOk: false, hints: [`Der Ausschnitt ist ${al}/360 des ganzen Kreises.`], sol: `A = ${al}/360 · π · ${r}² ≈ ${U.fmt(A, 1)} cm²` });
+      return N('Berechne die Fläche des <b>Kreisausschnitts</b>.' + RND, A, { unit: 'cm²', tol: 0.06, alts: [(al / 360) * 3.14 * r * r], vis, memOk: false, hints: [`Der Ausschnitt ist ${al}/360 des ganzen Kreises.`], sol: `A = ${al}/360 · π · ${r}² ≈ ${U.fmt(A, 1)} cm²` });
     },
   });
 
@@ -218,7 +217,7 @@
       s += U.line(...pA, ...pC, 'sv-c2') + U.line(...pB, ...pD, 'sv-c2');
       s += U.t(Z[0] - 6, Z[1] + 16, 'Z', 'sv-lbl') + U.edgeLabel(Z, pA, `${a} cm`, 14) + U.edgeLabel(pA, pB, `${b} cm`, 14);
       s += U.t((pA[0] + pC[0]) / 2 - 8, (pA[1] + pC[1]) / 2, `${c} cm`, 'sv-t sv-end') + U.t((pB[0] + pD[0]) / 2 + 8, (pB[1] + pD[1]) / 2, 'x', 'sv-t sv-acc');
-      return N('Die roten Strecken sind parallel. Berechne x.' + RND, d, { unit: 'cm', tol: 0.06, vis: U.svg(400, 220, s), memOk: false, hints: ['2. Strahlensatz: x : ' + c + ' = ZB : ZA', `ZB = ${a} + ${b} = ${a + b} cm`], sol: `x = ${c} · ${a + b} : ${a} ≈ ${U.fmt(d, 1)} cm`, mistakes: [{ v: (c * b) / a, msg: 'Verwende die ganze Strecke ZB = ZA + AB!' }] });
+      return N('Die farbig markierten Strecken sind parallel. Berechne x.' + RND, d, { unit: 'cm', tol: 0.06, vis: U.svg(400, 220, s), memOk: false, hints: ['2. Strahlensatz: x : ' + c + ' = ZB : ZA', `ZB = ${a} + ${b} = ${a + b} cm`], sol: `x = ${c} · ${a + b} : ${a} ≈ ${U.fmt(d, 1)} cm`, mistakes: [{ v: (c * b) / a, msg: 'Verwende die ganze Strecke ZB = ZA + AB!' }] });
     },
   });
 })();

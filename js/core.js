@@ -17,7 +17,14 @@
     stars(topic, level) { const r = data.best[topic + '|' + level]; return r ? r.stars : 0; },
     setStars(topic, level, st) { const r = S.rec(topic, level); const nw = st > r.stars; if (nw) r.stars = st; S.save(); return nw; },
     setBest(topic, level, field, v, lowerIsBetter) { const r = S.rec(topic, level); const nw = !r[field] || (lowerIsBetter ? v < r[field] : v > r[field]); if (nw) r[field] = v; S.save(); return nw; },
-    addXP(n) { data.xp += Math.max(0, Math.round(n)); if (data.xp >= 1000) S.badge('xp1000'); S.save(); },
+    addXP(n) {
+      const before = S.level();
+      data.xp += Math.max(0, Math.round(n));
+      if (data.xp >= 1000) S.badge('xp1000');
+      S.save();
+      const after = S.level();
+      if (after > before) setTimeout(() => { MA.toast(`🆙 <b>LEVEL ${after}!</b> Weiter so!`, 3500); MA.Sound.coin(); MA.confetti(1800); }, 900);
+    },
     level() { return Math.floor(data.xp / 250) + 1; },
     played(grade) {
       data.games++;
@@ -50,6 +57,8 @@
     { id: 'knobel', icon: '🧩', name: 'Knobelkönig', desc: '5 Runden in der Knobel-Ecke gespielt.' },
     { id: 'allgrades', icon: '🌍', name: 'Weltenbummler', desc: 'In allen Klassenstufen 5–10 gespielt.' },
     { id: 'xp1000', icon: '🚀', name: '1000 XP', desc: '1000 Erfahrungspunkte gesammelt.' },
+    { id: 'zweiter', icon: '🧗', name: 'Nicht aufgeben!', desc: 'Im zweiten Versuch richtig gelöst.' },
+    { id: 'tages', icon: '📅', name: 'Tagesheld', desc: 'Die Tages-Challenge geschafft (mind. 10 Treffer).' },
   ];
 
   /* ---------- Sound (Web Audio, kein Download nötig) ---------- */
@@ -120,6 +129,18 @@
     { name: 'Grün', color: '#39ff88' }, { name: 'Lila', color: '#b26bff' }, { name: 'Orange', color: '#ff9f1c' },
   ];
 
+  /* Tages-Challenge: jeden Tag ein anderes Thema (für alle gleich) */
+  MA.daily = () => {
+    const d = new Date();
+    const key = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+    const list = MA.topics.filter((t) => !t.mix);
+    let h = key >>> 0;
+    h = Math.imul(h ^ (h >>> 16), 2246822507) >>> 0;
+    h = Math.imul(h ^ (h >>> 13), 3266489909) >>> 0;
+    h = (h ^ (h >>> 16)) >>> 0;
+    return { topic: list[h % list.length], level: (key % 3) + 1, key };
+  };
+
   /* Aufgabe holen und Wiederholungen vermeiden */
   MA.taskSource = (topic, level) => {
     const recent = [];
@@ -127,6 +148,7 @@
       let t;
       for (let i = 0; i < 25; i++) {
         t = topic.gen(level);
+        t.topicId = t.topicId || topic.id;
         const key = t.q + (t.vis || '') + JSON.stringify(t.answer);
         if (!recent.includes(key)) { recent.push(key); if (recent.length > 8) recent.shift(); break; }
       }

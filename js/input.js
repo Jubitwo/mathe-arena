@@ -38,7 +38,8 @@
       if (given === null || given === undefined || isNaN(val)) return { ok: false, invalid: true };
       const target = t.type === 'frac' ? t.answer.n / t.answer.d : t.answer;
       const tol = t.tol || 1e-6;
-      ok = Math.abs(val - target) <= tol;
+      // alts: weitere korrekte Werte, z. B. gerechnet mit π ≈ 3,14
+      ok = [target].concat(t.alts || []).some((v) => Math.abs(val - v) <= tol);
       if (ok && t.type === 'frac' && t.simplify && typeof given === 'string') {
         const m = given.replace(/\s/g, '').match(/^-?(\d+)\/(\d+)$/);
         if (m && U.gcd(+m[1], +m[2]) > 1) return { ok: false, msg: 'Fast! Der Wert stimmt, aber der Bruch ist noch nicht vollständig gekürzt.', given };
@@ -147,9 +148,10 @@
         e.preventDefault();
       };
     } else if (t.type === 'choice') {
-      ans.innerHTML = `<div class="choices n${t.options.length}">${t.options.map((op, i) => `<button type="button" class="choice" data-i="${i}"><span class="ck">${i + 1}</span><span class="ct">${op}</span></button>`).join('')}</div>`;
+      const dis = o.disable || [];
+      ans.innerHTML = `<div class="choices n${t.options.length}">${t.options.map((op, i) => `<button type="button" class="choice ${dis.includes(i) ? 'wrong' : ''}" data-i="${i}" ${dis.includes(i) ? 'disabled' : ''}><span class="ck">${i + 1}</span><span class="ct">${op}</span></button>`).join('')}</div>`;
       ans.querySelectorAll('.choice').forEach((b) => b.addEventListener('click', () => { if (locked) return; ans.querySelectorAll('.choice').forEach((x) => x.classList.remove('sel')); b.classList.add('sel'); submit(+b.dataset.i); }));
-      keyHandler = (e) => { const i = parseInt(e.key, 10) - 1; if (i >= 0 && i < t.options.length) { e.preventDefault(); ans.querySelectorAll('.choice')[i].click(); } };
+      keyHandler = (e) => { const i = parseInt(e.key, 10) - 1; if (i >= 0 && i < t.options.length && !dis.includes(i)) { e.preventDefault(); ans.querySelectorAll('.choice')[i].click(); } };
     } else {
       let pick = null;
       ans.innerHTML = `<div class="pick-row"><span class="pick-info">${t.type === 'grid' ? 'Tippe auf einen Gitterpunkt.' : 'Tippe auf den Zahlenstrahl.'}</span><button type="button" class="btn btn-ok" disabled>OK ✔</button></div>`;
@@ -183,8 +185,11 @@
     /* Tipps */
     let hintIdx = 0;
     const hb = root.querySelector('.task-hintbox');
+    const lid = t.topicId || o.topicId;
     if (o.hints && t.hints && t.hints.length && !o.display) {
-      hb.innerHTML = `<button type="button" class="btn-hint">💡 Tipp</button><div class="hints"></div>`;
+      hb.innerHTML = `<div class="hint-btns"><button type="button" class="btn-hint">💡 Tipp</button>${lid && MA.LEARN && MA.LEARN[lid] ? '<button type="button" class="btn-hint btn-learn">📖 So geht\'s</button>' : ''}</div><div class="hints"></div>`;
+      const lb = hb.querySelector('.btn-learn');
+      if (lb) lb.addEventListener('click', () => MA.showLearn(lid));
       const btn = hb.querySelector('.btn-hint');
       btn.addEventListener('click', () => {
         if (hintIdx >= t.hints.length) return;
@@ -194,6 +199,7 @@
         if (hintIdx >= t.hints.length) btn.disabled = true;
         else btn.textContent = '💡 Noch ein Tipp';
       });
+      for (let i = 0; i < (o.showHints || 0); i++) btn.click();
     }
 
     if (o.keyboard !== false && keyHandler) MA.keyTarget = keyHandler;
@@ -209,6 +215,32 @@
     };
   };
 
+  /* ---------- Lernkarte „So geht's" ---------- */
+  MA.learnHTML = (id) => {
+    const c = MA.LEARN && MA.LEARN[id];
+    if (!c) return '';
+    return `<div class="learn">
+      <div class="lc lc-merke"><div class="lc-h">📌 Merke</div><div>${c.merke}</div></div>
+      <div class="lc lc-steps"><div class="lc-h">👣 So gehst du vor</div><ol>${c.schritte.map((s) => `<li>${s}</li>`).join('')}</ol></div>
+      <div class="lc lc-ex"><div class="lc-h">✏️ Beispiel</div><div>${c.beispiel}</div></div>
+      <div class="lc lc-err"><div class="lc-h">⚠️ Typischer Fehler</div><div>${c.fehler}</div></div>
+    </div>`;
+  };
+  MA.showLearn = (id) => {
+    const tp = MA.topics.find((x) => x.id === id);
+    if (!MA.LEARN || !MA.LEARN[id]) return;
+    const prevKey = MA.keyTarget;
+    const ov = document.createElement('div');
+    ov.className = 'modal';
+    ov.innerHTML = `<div class="modal-box" role="dialog" aria-modal="true" aria-label="Erklärung"><div class="modal-head"><h3 class="pixel ph">📖 SO GEHT'S${tp ? ' · ' + tp.title.toUpperCase() : ''}</h3><button type="button" class="btn btn-ghost modal-x" aria-label="Schließen">✕</button></div>${MA.learnHTML(id)}<button type="button" class="btn btn-big modal-ok">Verstanden – weiter ▶</button></div>`;
+    document.body.appendChild(ov);
+    const close = () => { ov.remove(); MA.keyTarget = prevKey; };
+    ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+    ov.querySelector('.modal-x').addEventListener('click', close);
+    ov.querySelector('.modal-ok').addEventListener('click', close);
+    MA.keyTarget = (e) => { if (e.key === 'Escape' || e.key === 'Enter') { e.preventDefault(); close(); } };
+  };
+
   /* ---------- Rückmeldung ----------
      o: { onNext, auto(ms), points, nextLabel, keyboard } */
   MA.feedback = (el, t, r, o = {}) => {
@@ -218,10 +250,14 @@
     let html = r.ok
       ? `<div class="fb-head">✔ ${praise}${o.points ? ` <span class="fb-pts">+${o.points}</span>` : ''}</div>`
       : `<div class="fb-head">✘ ${r.timeout ? 'Zeit abgelaufen!' : 'Leider nicht richtig.'}</div>${r.msg ? `<div class="fb-msg">⚠️ ${r.msg}</div>` : ''}<div class="fb-ans">Richtig ist: <b>${MA.answerHTML(t)}</b></div>`;
-    if (!r.ok || o.showSol) html += t.sol ? `<details class="fb-sol" ${o.solOpen ? 'open' : ''}><summary>Lösungsweg</summary><div>${t.sol}</div></details>` : '';
+    if (!r.ok || o.showSol) html += t.sol ? `<details class="fb-sol" ${o.solOpen || !r.ok ? 'open' : ''}><summary>Lösungsweg</summary><div>${t.sol}</div></details>` : '';
+    const lc = !r.ok && MA.LEARN && MA.LEARN[t.topicId];
+    if (lc) html += `<div class="fb-merke">📌 <b>Merke:</b> ${lc.merke} <button type="button" class="link-btn fb-learn">📖 Ganze Erklärung</button></div>`;
     if (o.onNext && !o.auto) html += `<button type="button" class="btn btn-next">${o.nextLabel || 'Weiter ▶'}</button>`;
     box.innerHTML = html;
     el.appendChild(box);
+    const fl = box.querySelector('.fb-learn');
+    if (fl) fl.addEventListener('click', () => MA.showLearn(t.topicId));
     let done = false;
     const go = () => { if (done) return; done = true; if (MA.keyTarget === kh) MA.keyTarget = null; o.onNext && o.onNext(); };
     const kh = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };

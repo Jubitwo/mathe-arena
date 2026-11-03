@@ -96,29 +96,29 @@
   });
 
   /* ---------- 3 Körper-Fabrik ---------- */
-  const cyl = (lr, lh) => U.svg(240, 240, `<path d="M50 50 L50 190 A70 20 0 0 0 190 190 L190 50" class="sv-shape"/><ellipse cx="120" cy="50" rx="70" ry="20" class="sv-face2"/><path d="M50 190 A70 20 0 0 1 190 190" class="sv-dash" fill="none"/>` + U.line(120, 50, 190, 50, 'sv-c2') + U.t(155, 42, lr, 'sv-t sv-mid') + U.t(202, 125, lh, 'sv-t'));
+  const cyl = (lr, lh) => U.svg(290, 240, `<path d="M50 50 L50 190 A70 20 0 0 0 190 190 L190 50" class="sv-shape"/><ellipse cx="120" cy="50" rx="70" ry="20" class="sv-face2"/><path d="M50 190 A70 20 0 0 1 190 190" class="sv-dash" fill="none"/>` + U.line(120, 50, 190, 50, 'sv-c2') + U.t(155, 42, lr, 'sv-t sv-mid') + U.t(202, 125, lh, 'sv-t'));
   const cone = (lr, lh) => U.svg(240, 240, `<path d="M50 190 L120 30 L190 190 A70 20 0 0 1 50 190" class="sv-shape"/><path d="M50 190 A70 20 0 0 1 190 190" class="sv-dash" fill="none"/>` + U.line(120, 30, 120, 190, 'sv-dash2') + U.line(120, 190, 190, 190, 'sv-c2') + U.t(155, 210, lr, 'sv-t sv-mid') + U.t(128, 120, lh, 'sv-t'));
   const sphere = (lr) => U.svg(240, 240, `<circle cx="120" cy="120" r="90" class="sv-shape"/><ellipse cx="120" cy="120" rx="90" ry="22" class="sv-dash" fill="none"/>` + U.line(120, 120, 210, 120, 'sv-c2') + U.t(165, 112, lr, 'sv-t sv-mid'));
   const pyr = (la, lh) => U.svg(260, 240, `<polygon points="40,190 170,190 220,150 90,150" class="sv-face2"/><polygon points="40,190 170,190 130,40" class="sv-shape"/><polygon points="170,190 220,150 130,40" class="sv-face3"/>` + U.line(130, 40, 130, 170, 'sv-dash2') + U.t(105, 210, la, 'sv-t sv-mid') + U.t(136, 110, lh, 'sv-t'));
   const silo = (lr, lh) => U.svg(240, 260, `<path d="M50 90 A70 70 0 0 1 190 90 L190 220 A70 20 0 0 1 50 220 Z" class="sv-shape"/><path d="M50 90 A70 20 0 0 0 190 90" class="sv-dash" fill="none"/>` + U.line(120, 220, 190, 220, 'sv-c2') + U.t(155, 245, lr, 'sv-t sv-mid') + U.t(200, 160, lh, 'sv-t'));
-  const tolV = (v) => Math.max(1.01, v * 0.005);
+  const tolV = () => 1.01; // ganze Zahlen; Rechnen mit π oder 3,14 wird über alts akzeptiert
   R({
     id: 'k10-koerper', icon: '🏭', title: 'Körper-Fabrik', tags: ['visuell'],
     bp: 'Messen', desc: 'Volumen und Oberfläche von Zylinder, Kegel, Kugel, Pyramide.',
     gen(l) {
       const r = U.ri(2, 10), h = U.ri(3, 20);
       const RG = ' <span class="note">(auf ganze cm³ runden)</span>';
-      if (l === 1) { const V = Math.PI * r * r * h; return N('Berechne das <b>Volumen</b> des Zylinders.' + RG, V, { unit: 'cm³', tol: tolV(V), vis: cyl(`r = ${r} cm`, `h = ${h} cm`), memOk: false, hints: ['V = π · r² · h'], sol: `V = π · ${r}² · ${h} ≈ ${U.fmt(V, 0)} cm³`, mistakes: [{ v: Math.PI * 2 * r * h, msg: 'Der Radius muss quadriert werden!' }] }); }
+      if (l === 1) { const V = Math.PI * r * r * h; return N('Berechne das <b>Volumen</b> des Zylinders.' + RG, V, { unit: 'cm³', tol: tolV(V), alts: [3.14 * r * r * h], vis: cyl(`r = ${r} cm`, `h = ${h} cm`), memOk: false, hints: ['V = π · r² · h'], sol: `V = π · ${r}² · ${h} ≈ ${U.fmt(V, 0)} cm³`, mistakes: [{ v: Math.PI * 2 * r * h, msg: 'Der Radius muss quadriert werden!' }] }); }
       if (l === 2) {
         const k = U.ri(0, 2);
-        if (k === 0) { const V = (Math.PI * r * r * h) / 3; return N('Berechne das <b>Volumen</b> des Kegels.' + RG, V, { unit: 'cm³', tol: tolV(V), vis: cone(`r = ${r} cm`, `h = ${h} cm`), memOk: false, hints: ['V = ⅓ · π · r² · h'], sol: `V = ⅓ · π · ${r}² · ${h} ≈ ${U.fmt(V, 0)} cm³`, mistakes: [{ v: Math.PI * r * r * h, msg: 'Das ist ein Zylinder – beim Kegel noch durch 3 teilen!' }] }); }
-        if (k === 1) { const V = (4 / 3) * Math.PI * r ** 3; return N('Berechne das <b>Volumen</b> der Kugel.' + RG, V, { unit: 'cm³', tol: tolV(V), vis: sphere(`r = ${r} cm`), memOk: false, hints: ['V = ⁴⁄₃ · π · r³'], sol: `V = ⁴⁄₃ · π · ${r}³ ≈ ${U.fmt(V, 0)} cm³` }); }
+        if (k === 0) { const V = (Math.PI * r * r * h) / 3; return N('Berechne das <b>Volumen</b> des Kegels.' + RG, V, { unit: 'cm³', tol: tolV(V), alts: [(3.14 * r * r * h) / 3], vis: cone(`r = ${r} cm`, `h = ${h} cm`), memOk: false, hints: ['V = ⅓ · π · r² · h'], sol: `V = ⅓ · π · ${r}² · ${h} ≈ ${U.fmt(V, 0)} cm³`, mistakes: [{ v: Math.PI * r * r * h, msg: 'Das ist ein Zylinder – beim Kegel noch durch 3 teilen!' }] }); }
+        if (k === 1) { const V = (4 / 3) * Math.PI * r ** 3; return N('Berechne das <b>Volumen</b> der Kugel.' + RG, V, { unit: 'cm³', tol: tolV(V), alts: [(4 / 3) * 3.14 * r ** 3], vis: sphere(`r = ${r} cm`), memOk: false, hints: ['V = ⁴⁄₃ · π · r³'], sol: `V = ⁴⁄₃ · π · ${r}³ ≈ ${U.fmt(V, 0)} cm³` }); }
         const a = U.ri(3, 12) * 1; const V = (a * a * h) / 3;
         return N('Berechne das <b>Volumen</b> der quadratischen Pyramide.' + RG, V, { unit: 'cm³', tol: tolV(V), vis: pyr(`a = ${a} cm`, `h = ${h} cm`), memOk: false, hints: ['V = ⅓ · a² · h'], sol: `V = ⅓ · ${a}² · ${h} = ${U.fmt(V, 1)} cm³`, mistakes: [{ v: a * a * h, msg: 'Pyramide: noch durch 3 teilen!' }] });
       }
       const k = U.ri(0, 2);
-      if (k === 0) { const O = 2 * Math.PI * r * r + 2 * Math.PI * r * h; return N('Berechne die <b>Oberfläche</b> des Zylinders.' + ' <span class="note">(auf ganze cm² runden)</span>', O, { unit: 'cm²', tol: tolV(O), vis: cyl(`r = ${r} cm`, `h = ${h} cm`), memOk: false, hints: ['O = 2 · Kreisfläche + Mantel', 'Mantel = Umfang · Höhe = 2πr · h'], sol: `O = 2π · ${r}² + 2π · ${r} · ${h} ≈ ${U.fmt(O, 0)} cm²`, mistakes: [{ v: Math.PI * r * r + 2 * Math.PI * r * h, msg: 'Ein Zylinder hat ZWEI Kreisflächen (Deckel und Boden).' }] }); }
-      if (k === 1) { const V = Math.PI * r * r * h + (2 / 3) * Math.PI * r ** 3; return N('Ein Silo besteht aus einem Zylinder mit einer Halbkugel als Dach. Berechne das <b>Volumen</b>.' + ' <span class="note">(auf ganze m³ runden)</span>', V, { unit: 'm³', tol: tolV(V), vis: silo(`r = ${r} m`, `h = ${h} m`), memOk: false, hints: ['Zylinder + halbe Kugel', 'Halbkugel: V = ⅔ · π · r³'], sol: `π · ${r}² · ${h} + ⅔ · π · ${r}³ ≈ ${U.fmt(V, 0)} m³`, mistakes: [{ v: Math.PI * r * r * h + (4 / 3) * Math.PI * r ** 3, msg: 'Es ist nur eine HALBE Kugel!' }] }); }
+      if (k === 0) { const O = 2 * Math.PI * r * r + 2 * Math.PI * r * h; return N('Berechne die <b>Oberfläche</b> des Zylinders.' + ' <span class="note">(auf ganze cm² runden)</span>', O, { unit: 'cm²', tol: tolV(O), alts: [2 * 3.14 * r * r + 2 * 3.14 * r * h], vis: cyl(`r = ${r} cm`, `h = ${h} cm`), memOk: false, hints: ['O = 2 · Kreisfläche + Mantel', 'Mantel = Umfang · Höhe = 2πr · h'], sol: `O = 2π · ${r}² + 2π · ${r} · ${h} ≈ ${U.fmt(O, 0)} cm²`, mistakes: [{ v: Math.PI * r * r + 2 * Math.PI * r * h, msg: 'Ein Zylinder hat ZWEI Kreisflächen (Deckel und Boden).' }] }); }
+      if (k === 1) { const V = Math.PI * r * r * h + (2 / 3) * Math.PI * r ** 3; return N('Ein Silo besteht aus einem Zylinder mit einer Halbkugel als Dach. Berechne das <b>Volumen</b>.' + ' <span class="note">(auf ganze m³ runden)</span>', V, { unit: 'm³', tol: tolV(V), alts: [3.14 * r * r * h + (2 / 3) * 3.14 * r ** 3], vis: silo(`r = ${r} m`, `h = ${h} m`), memOk: false, hints: ['Zylinder + halbe Kugel', 'Halbkugel: V = ⅔ · π · r³'], sol: `π · ${r}² · ${h} + ⅔ · π · ${r}³ ≈ ${U.fmt(V, 0)} m³`, mistakes: [{ v: Math.PI * r * r * h + (4 / 3) * Math.PI * r ** 3, msg: 'Es ist nur eine HALBE Kugel!' }] }); }
       const hh = U.ri(3, 15), V = Math.round((Math.PI * r * r * hh) / 3);
       return N(`Ein Kegel hat den Radius ${r} cm und das Volumen ${U.fmt(V, 0)} cm³. Wie hoch ist er?` + RND, (3 * V) / (Math.PI * r * r), { unit: 'cm', tol: 0.06, vis: cone(`r = ${r} cm`, 'h = ?'), memOk: false, hints: ['Stelle V = ⅓πr²h nach h um.'], sol: `h = 3 · ${U.fmt(V, 0)} : (π · ${r}²) ≈ ${U.fmt((3 * V) / (Math.PI * r * r), 1)} cm` });
     },
@@ -149,12 +149,14 @@
         const mant = U.ri(11, 99) / 10, e = U.ri(-7, -2);
         const num = U.round(mant * 10 ** e, 10);
         const s = U.fmt(num, 10);
-        return N(`Schreibe in wissenschaftlicher Schreibweise: <span class="expr inl">${s} = ${U.fmt(mant, 1)} · 10<sup>?</sup></span>`, e, { mq: `${s} = ${U.fmt(mant, 1)} · 10^?`, hints: ['Um wie viele Stellen muss das Komma nach RECHTS wandern? Das ergibt einen negativen Exponenten.'], sol: `${s} = ${U.fmt(mant, 1)} · 10<sup>${e}</sup>`, mistakes: [{ v: -e, msg: 'Kleine Zahlen haben einen NEGATIVEN Exponenten.' }] });
+        return N(`Schreibe in wissenschaftlicher Schreibweise: <span class="expr inl">${s} = ${U.fmt(mant, 1)} · 10<sup>?</sup></span>`, e, { mq: `${s} = ${U.fmt(mant, 1)} · 10^?`, hints: ['Um wie viele Stellen muss das Komma nach RECHTS wandern? Das ergibt einen negativen Exponenten.'], sol: `Das Komma wandert ${-e} Stellen nach rechts → negativer Exponent: ${s} = ${U.fmt(mant, 1)} · 10<sup>${U.fmt(e)}</sup>`, mistakes: [{ v: -e, msg: 'Kleine Zahlen haben einen NEGATIVEN Exponenten.' }] });
       }
       if (k === 1) {
-        const a = U.ri(2, 4), b = U.ri(2, 4), e1 = U.ri(3, 8), e2 = U.ri(-6, -2);
-        const t = { q: `Berechne: <span class="expr inl">(${a} · 10<sup>${e1}</sup>) · (${b} · 10<sup>${U.fmt(e2)}</sup>)</span>`, mq: `(${a} · 10^${e1}) · (${b} · 10^${e2})`, hints: ['Zahlen multiplizieren, Zehnerpotenzen: Exponenten addieren.'], sol: `${a * b} · 10<sup>${U.fmt(e1 + e2)}</sup>` };
-        return U.choice(t, `${a * b} · 10<sup>${U.fmt(e1 + e2)}</sup>`, [{ h: `${a * b} · 10<sup>${U.fmt(e1 * e2)}</sup>`, msg: 'Exponenten werden addiert, nicht multipliziert.' }, `${a + b} · 10<sup>${U.fmt(e1 + e2)}</sup>`, `${a * b} · 10<sup>${U.fmt(e1 - e2)}</sup>`]);
+        const [a, b] = U.pick([[2, 3], [2, 4], [3, 3], [2, 2], [1.5, 4], [2.5, 2], [1.2, 3], [4, 2]]);
+        const e1 = U.ri(3, 8); let e2; do e2 = U.ri(-7, -2); while (e1 + e2 === 0);
+        const t = { q: `Berechne: <span class="expr inl">(${U.fmt(a)} · 10<sup>${e1}</sup>) · (${U.fmt(b)} · 10<sup>${U.fmt(e2)}</sup>)</span>`, mq: `(${a} · 10^${e1}) · (${b} · 10^${e2})`, hints: ['Zahlen multiplizieren, Zehnerpotenzen: Exponenten addieren.'], sol: `${U.fmt(a)} · ${U.fmt(b)} = ${U.fmt(a * b)} und 10<sup>${e1}</sup> · 10<sup>${U.fmt(e2)}</sup> = 10<sup>${U.fmt(e1 + e2)}</sup>` };
+        const m = U.fmt(a * b);
+        return U.choice(t, `${m} · 10<sup>${U.fmt(e1 + e2)}</sup>`, [{ h: `${m} · 10<sup>${U.fmt(e1 * e2)}</sup>`, msg: 'Exponenten werden addiert, nicht multipliziert.' }, `${U.fmt(a + b)} · 10<sup>${U.fmt(e1 + e2)}</sup>`, `${m} · 10<sup>${U.fmt(e1 - e2)}</sup>`]);
       }
       const b = U.pick([2, 3, 4, 5]), e = U.ri(1, 3);
       return FR(U.expr(`${pw(b, -e)} = ? (als Bruch)`), { n: 1, d: b ** e }, { mq: pw(b, -e), hints: ['Negativer Exponent: Kehrwert bilden.'], sol: `${pw(b, -e)} = ${F(1, b ** e)}`, mistakes: [{ v: -(b ** e), msg: 'Ein negativer Exponent macht die Zahl nicht negativ – er bedeutet Kehrwert!' }] });
@@ -178,7 +180,7 @@
           const a = U.rnz(-8, 8), b = U.rnz(-8, 8); if (a === -b) return this.gen(l);
           const eq = `(${U.lin(1, -a)})(${U.lin(1, -b)}) = 0`;
           const r = [a, b].sort((x, y) => x - y);
-          const t = { q: `Satz vom Nullprodukt: <span class="expr inl">${eq}</span>`, mq: eq, hints: ['Ein Produkt ist null, wenn einer der Faktoren null ist.'], sol: `x − ${U.par(a)} = 0 oder x − ${U.par(b)} = 0 → ${L(r)}` };
+          const t = { q: `Satz vom Nullprodukt: <span class="expr inl">${eq}</span>`, mq: eq, hints: ['Ein Produkt ist null, wenn einer der Faktoren null ist.'], sol: `${U.lin(1, -a)} = 0 → x = ${U.fmt(a)} oder ${U.lin(1, -b)} = 0 → x = ${U.fmt(b)}. Also ${L(r)}` };
           return U.choice(t, L(r), [{ h: L([-a, -b].sort((x, y) => x - y)), msg: 'Vorzeichenfalle: x − 3 = 0 → x = +3.' }, L([a]), L([a * b])]);
         }
         const p = U.rnz(-9, 9);

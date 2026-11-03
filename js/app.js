@@ -27,7 +27,7 @@
   /* Zufalls-Mix je Klasse */
   GRADES.forEach((g) => {
     const list = MA.topics.filter((t) => t.grade === g);
-    MA.topics.push({ id: 'mix-' + g, grade: g, mix: true, icon: '🎰', title: 'Zufalls-Mix', tags: ['Mix'], bp: 'alle Leitideen', desc: `Bunt gemischt aus allen Themen der ${gName(g)}.`, gen(l) { return U.pick(list).gen(l); } });
+    MA.topics.push({ id: 'mix-' + g, grade: g, mix: true, icon: '🎰', title: 'Zufalls-Mix', tags: ['Mix'], bp: 'alle Leitideen', desc: `Bunt gemischt aus allen Themen der ${gName(g)}.`, gen(l) { const s = U.pick(list); const t = s.gen(l); t.topicId = s.id; return t; } });
   });
   const topicById = (id) => MA.topics.find((t) => t.id === id);
 
@@ -101,6 +101,7 @@
     MA.keyTarget = null;
     app.innerHTML = `<section class="screen grades">
       <h1 class="pixel h-title">WÄHLE DEINE ARENA</h1>
+      ${(() => { const d = MA.daily(); const got = S.data.badges.includes('tages') && S.data.dailyDone === d.key; return `<a class="daily" href="#/t/${d.topic.id}" data-daily="1"><span class="daily-ic">📅</span><span class="daily-tx"><b class="pixel">TAGES-CHALLENGE</b><br>${d.topic.icon} ${d.topic.title} (${gName(d.topic.grade)}) · ${MA.LEVELS[d.level].s} · ⚡ Blitz-Runde – schaffst du 10 Treffer?</span>${got ? '<span class="daily-ok">✔</span>' : '<span class="daily-go pixel">LOS ▶</span>'}</a>`; })()}
       <div class="grade-grid">${GRADES.map((g) => {
         const p = gradeProgress(g);
         return `<a class="gcard ${g === 'K' ? 'knobel' : ''}" href="#/k/${g}" style="--c:${GINFO[g].c}">
@@ -113,6 +114,8 @@
       }).join('')}</div>
       <div class="hint-line">Tipp: Für den Unterricht oben rechts 📺 Beamer-Modus und ⛶ Vollbild einschalten.</div>
     </section>`;
+    const dl = app.querySelector('[data-daily]');
+    if (dl) dl.addEventListener('click', () => { const d = MA.daily(); S.data.last = Object.assign({}, S.data.last, { level: d.level, mode: 'solo', format: 'blitz' }); S.save(); });
     syncTop();
   }
 
@@ -153,6 +156,7 @@
     app.innerHTML = `<section class="screen setup" style="--c:${GINFO[t.grade].c}">
       <div class="crumbs"><a href="#/k/${t.grade}" class="btn btn-ghost">◀ ${gName(t.grade)}</a></div>
       <div class="setup-head"><div class="t-icon big">${t.icon}</div><div><h1 class="pixel h-title left">${t.title.toUpperCase()}</h1><p class="h-sub left">${t.desc}</p><div class="bp-badge">Leitidee: ${t.bp}</div></div></div>
+      ${MA.LEARN && MA.LEARN[t.id] ? `<details class="panel learn-panel" ${[1, 2, 3].some((l) => S.stars(t.id, l)) ? '' : 'open'}><summary><span class="pixel">📖 SO GEHT'S</span> <span class="learn-sub">– erst lesen, dann spielen</span></summary>${MA.learnHTML(t.id)}</details>` : t.mix ? '<div class="panel learn-panel mixinfo">🎰 Im Zufalls-Mix findest du bei jeder Aufgabe über „📖 So geht\'s“ die passende Erklärung.</div>' : ''}
       <div class="setup-grid">
         <div class="panel">
           <h3 class="pixel ph">1 · SCHWIERIGKEIT</h3>
@@ -194,6 +198,7 @@
         h += sel('len', 'Streckenlänge', [[8, 'Kurz (8)'], [10, 'Normal (10)'], [15, 'Lang (15)'], [20, 'Marathon (20)']], opt.len);
         if (mode !== 'solo') h += sel('timer', 'Zeit pro Aufgabe', [[0, 'ohne Zeitlimit'], [30, '30 Sekunden'], [60, '60 Sekunden'], [90, '90 Sekunden'], [120, '2 Minuten']], opt.timer);
       }
+      if (format === 'duell' && window.innerWidth < 600) h += '<div class="opt-info">📱 Tipp: Auf dem Handy ist es eng. Am Tablet oder Laptop macht das Duell zu zweit am meisten Spaß.</div>';
       if (format === 'duell') h += nameInputs() + sel('target', 'Seil-Züge zum Sieg', [[3, '3 (kurz)'], [5, '5 (normal)'], [7, '7 (lang)']], opt.target) + chk('flip', 'Gegenüber sitzen (Tablet liegt flach zwischen euch)', opt.flip);
       if (format === 'memory') {
         h += sel('pairs', 'Anzahl Paare', [[6, '6 Paare'], [8, '8 Paare'], [10, '10 Paare']], opt.pairs);
@@ -201,7 +206,7 @@
         if (mode === 'gruppe') h += sel('teamN', 'Anzahl Teams', [[2, '2 Teams'], [3, '3 Teams'], [4, '4 Teams']], Math.min(opt.teamN, 4)) + teamInputs(Math.min(opt.teamN, 4));
       }
       if (format === 'tresor') h += `<div class="opt-info">${mode === 'solo' ? '3' : mode === 'partner' ? '4' : '5'} Leben · 5 Schlösser · Tipps kosten 10 Sekunden Strafzeit.${mode === 'gruppe' ? '<br>Ideal als Stundeneinstieg: Die ganze Klasse knackt gemeinsam den Tresor.' : ''}</div>`;
-      if (format === 'training') h += `<div class="opt-info">10 Aufgaben · Tipps verfügbar · 9 richtig = ★★★</div>`;
+      if (format === 'training') h += `<div class="opt-info">10 Aufgaben · Tipps & Erklärung · bei einem Fehler gibt es einen 2. Versuch · 9 Punkte = ★★★</div>`;
       if (format === 'blitz') h += `<div class="opt-info">60 Sekunden · je 5 richtige in Folge = +5 Sekunden</div>`;
       $('.opts').innerHTML = h;
       $('.opts').querySelectorAll('[data-o]').forEach((e) => e.addEventListener('change', () => {
@@ -244,9 +249,10 @@
   function gameScreen() {
     stopGame();
     const p = pending, f = MA.FORMATS[p.format];
-    app.innerHTML = `<section class="screen game" style="--c:${GINFO[p.topic.grade].c}">
+    app.innerHTML = `<section class="screen game" data-format="${p.format}" style="--c:${GINFO[p.topic.grade].c}">
       <div class="game-top">
-        <button type="button" class="btn btn-ghost btn-quit">✕</button>
+        <button type="button" class="btn btn-ghost btn-quit" aria-label="Spiel beenden">✕</button>
+        ${MA.LEARN && MA.LEARN[p.topic.id] ? '<button type="button" class="btn btn-ghost btn-learn-top" aria-label="Erklärung">📖</button>' : ''}
         <div class="game-title"><span class="gt-icon">${p.topic.icon}</span><span class="gt-name">${p.topic.title}</span><span class="gt-meta">${MA.LEVELS[p.level].s} · ${f.icon} ${f.name}</span></div>
         <div class="hud"></div>
       </div>
@@ -260,6 +266,8 @@
       retry: () => gameScreen(),
       back: () => (location.hash = '#/t/' + p.topic.id),
     };
+    const lt = app.querySelector('.btn-learn-top');
+    if (lt) lt.addEventListener('click', () => MA.showLearn(p.topic.id));
     app.querySelector('.btn-quit').addEventListener('click', () => {
       if (!app.querySelector('.result') && !window.confirm('Spiel wirklich beenden?')) return;
       ctx.back();
@@ -279,7 +287,8 @@
           <li>Klasse wählen → Thema wählen.</li>
           <li>Niveau mit den Sternen festlegen: <b>★ G</b> grundlegend, <b>★★ M</b> mittel, <b>★★★ E</b> erweitert.</li>
           <li>Modus wählen: Solo, Partner oder Gruppe – passende Spiele erscheinen automatisch.</li>
-          <li>Mit 👁 „Beispielaufgabe“ siehst du vorab Aufgabe und Lösung.</li></ol></div>
+          <li>Mit 👁 „Beispielaufgabe“ siehst du vorab Aufgabe und Lösung.</li>
+          <li>Jedes Thema hat eine Lernkarte <b>📖 So geht's</b> (Merksatz, Schritte, Beispiel, typischer Fehler) – ideal für selbstständiges Arbeiten und zu Hause.</li></ol></div>
         <div class="panel"><h3 class="pixel ph">SPIELFORMATE</h3><ul>
           ${Object.values(MA.FORMATS).map((f) => `<li><b>${f.icon} ${f.name}</b> (${f.modes.map((m) => MODES[m].name).join(', ')}): ${f.desc}</li>`).join('')}</ul></div>
         <div class="panel"><h3 class="pixel ph">IM UNTERRICHT</h3><ul>
@@ -292,7 +301,8 @@
           <li><b>Zufalls-Mix:</b> Vermischte Wiederholung aller Themen einer Klasse.</li></ul></div>
         <div class="panel"><h3 class="pixel ph">DIDAKTIK</h3><ul>
           <li>Aufgaben werden zufällig erzeugt – es gehen nie die Aufgaben aus, Abschreiben lohnt nicht.</li>
-          <li>Gestufte Tipps statt sofortiger Lösung; danach ein Lösungsweg.</li>
+          <li>Gestufte Tipps statt sofortiger Lösung. Im Training gibt es nach einem Fehler einen zweiten Versuch mit Tipp, erst danach den ausführlichen Lösungsweg.</li>
+          <li>Lernkarten mit Merksatz, Schritt-für-Schritt-Anleitung, Beispiel und typischem Fehler zu allen Themen.</li>
           <li>Typische Fehler werden erkannt und gezielt kommentiert (z. B. „Nenner nicht addieren!“).</li>
           <li>Rechenschwache profitieren von visuellen Darstellungen, Starke von Knobel- und E-Aufgaben.</li></ul></div>
         <div class="panel"><h3 class="pixel ph">DATENSCHUTZ</h3><p>Die Seite läuft komplett im Browser. Es gibt keine Anmeldung, keinen Server, keine Cookies, kein Tracking und keine externen Schriften. Fortschritt (Sterne, XP, Abzeichen) wird nur lokal auf dem Gerät gespeichert.</p>

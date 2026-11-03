@@ -25,6 +25,15 @@ Alle Aufgaben werden zufällig erzeugt – es gehen nie die Aufgaben aus. Jede A
 - **Mathe-Memory:** Aufgabe ↔ Ergebnis (z. B. Pizza-Bild ↔ Bruch). Solo, Partner oder Teams.
 - **Escape-Tresor:** 5 Schlösser, begrenzte Leben – kooperativ, ideal als Stundeneinstieg.
 
+## Neu in Version 2
+
+- **📖 Lernkarten „So geht's“** zu allen 42 Themen: Merksatz, Schritt-für-Schritt-Anleitung, Beispiel, typischer Fehler – auf der Startseite jedes Themas und während des Spiels.
+- **Zweiter Versuch im Training:** Nach einem Fehler gibt es erst einen Tipp und eine zweite Chance, dann den ausführlichen Lösungsweg.
+- **Ausführlichere Lösungswege** (Zerlegen, Vorzeichenregeln, gemeinsamer Nenner, Probe …).
+- **Korrekturen:** Formulierungen, Minuszeichen, π oder 3,14 werden beide akzeptiert, Aufgaben ohne echte Herausforderung entfernt.
+- **Handy:** kompakter Spielbildschirm, Duell passt auf einen Bildschirm, Rennbahn immer sichtbar.
+- **Spaß:** Tages-Challenge, Level-up-Feier, Serien-Meldungen, Robo kommentiert die Rallye, neue Abzeichen.
+
 ## Benutzen
 
 - **Online:** über GitHub Pages (siehe unten).

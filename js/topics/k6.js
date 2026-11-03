@@ -17,7 +17,7 @@
         const d = U.pick([2, 3, 4, 5, 6, 8]), k = U.ri(1, d - 1);
         return FR('Welcher Bruchteil der Pizza ist mit Salami belegt?', { n: k, d }, {
           vis: U.pizza(d, k), mq: '', hints: ['Nenner = Anzahl aller Stücke, Zähler = Anzahl der belegten Stücke.'],
-          sol: `${k} von ${d} Stücken sind belegt: ${F(k, d)}`,
+          sol: `${k} von ${d} Stücken ${k === 1 ? 'ist' : 'sind'} belegt: ${F(k, d)}${U.gcd(k, d) > 1 ? ' = ' + U.Ff(U.frac(k, d)) : ''}`,
           mistakes: [{ v: (d - k) / d, msg: 'Das ist der Teil OHNE Salami.' }, ...(d - k !== k ? [{ v: k / (d - k), msg: 'Unten steht die Anzahl ALLER Stücke.' }] : [])],
         });
       }
@@ -73,8 +73,12 @@
         const e = `${U.Ff(a)} ${op} ${U.Ff(b)}`;
         const r = op === '+' ? U.fadd(a, b) : op === '−' ? U.fsub(a, b) : U.fmul(a, b);
         const mist = op !== '·' ? [{ v: (op === '+' ? a.n + b.n : a.n - b.n) / (a.d + b.d), msg: 'Nie Nenner addieren! Bringe beide Brüche erst auf einen gemeinsamen Nenner.' }] : [];
-        const hint = op === '·' ? 'Zähler mal Zähler, Nenner mal Nenner.' : `Gemeinsamer Nenner: ${U.lcm(a.d, b.d)}`;
-        return FR(U.expr(e + ' = ?'), r, { mq: e, hints: [hint], sol: `${e} = ${U.Ff(r)}`, mistakes: mist });
+        const L = U.lcm(a.d, b.d);
+        const hint = op === '·' ? 'Zähler mal Zähler, Nenner mal Nenner.' : `Gemeinsamer Nenner: ${L}`;
+        const sol = op === '·'
+          ? `${F(a.n + ' · ' + b.n, a.d + ' · ' + b.d)} = ${F(a.n * b.n, a.d * b.d)}${U.gcd(a.n * b.n, a.d * b.d) > 1 ? ' = ' + U.Ff(r) + ' (gekürzt)' : ''}`
+          : `Auf den Nenner ${L} erweitern: ${F(a.n * (L / a.d), L)} ${op} ${F(b.n * (L / b.d), L)} = ${F(op === '+' ? a.n * (L / a.d) + b.n * (L / b.d) : a.n * (L / a.d) - b.n * (L / b.d), L)}${r.d !== L ? ' = ' + U.Ff(r) + ' (gekürzt)' : ''}`;
+        return FR(U.expr(e + ' = ?'), r, { mq: e, hints: [hint], sol, mistakes: mist });
       }
       const k = U.ri(0, 2);
       if (k === 0) {
@@ -132,7 +136,7 @@
           return N(U.expr(e + ' = ?'), r, { mq: e, hints: ['Komma unter Komma schreiben!'], sol: `${e} = ${U.fmt(r)}` });
         }
         const a = U.ri(11, 9999) / 100, p = U.pick([10, 100, 1000]), mul = U.chance(0.5);
-        const e = `${U.fmt(a)} ${mul ? '·' : ':'} ${U.fmt(p, 0)}`, r = U.round(mul ? a * p : a / p, 6);
+        const e = `${U.fmt(a)} ${mul ? '·' : ':'} ${p}`, r = U.round(mul ? a * p : a / p, 6);
         return N(U.expr(e + ' = ?'), r, { mq: e, hints: [`Das Komma wandert um ${String(p).length - 1} Stelle(n) nach ${mul ? 'rechts' : 'links'}.`], sol: `${e} = ${U.fmt(r, 6)}` });
       }
       if (U.chance(0.5)) {

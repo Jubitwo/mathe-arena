@@ -7,13 +7,16 @@ const root = path.join(__dirname, '..', 'js');
 const load = (f) => eval(fs.readFileSync(path.join(root, f), 'utf8'));
 load('util.js');
 ['k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'knobel'].forEach((f) => load('topics/' + f + '.js'));
+load('learn.js');
 const U = MA.U;
 const RUNS = +process.argv[2] || 400;
 let errors = 0;
 const err = (t, l, msg, task) => { errors++; if (errors < 60) console.log(`✘ ${t.id} L${l}: ${msg}`, task ? JSON.stringify(task).slice(0, 300) : ''); };
-const bad = /NaN|undefined|Infinity|\[object/;
+const bad = /NaN|undefined|Infinity|\[object|[=(:;] -\d|\b1x\b/;
 
 for (const t of MA.topics) {
+  const lc = MA.LEARN[t.id];
+  if (!lc || !lc.merke || !lc.schritte || !lc.beispiel || !lc.fehler) err(t, 0, 'Lernkarte fehlt oder ist unvollständig');
   for (const l of [1, 2, 3]) {
     const seen = new Set();
     let mem = 0;
@@ -27,6 +30,7 @@ for (const t of MA.topics) {
       seen.add(task.q + (task.vis || '') + JSON.stringify(task.answer));
       switch (task.type) {
         case 'num':
+          (task.alts || []).forEach((v) => { if (!isFinite(v) || Math.abs(v - task.answer) > Math.max(2, Math.abs(task.answer) * 0.01)) err(t, l, 'alternative Lösung unplausibel ' + v, task); });
           if (typeof task.answer !== 'number' || !isFinite(task.answer)) err(t, l, 'Antwort keine Zahl', task);
           else {
             // Ist die gerundete Antwort im Toleranzbereich (Schüler tippen gerundet)?

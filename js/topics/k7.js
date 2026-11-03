@@ -13,40 +13,50 @@
     id: 'k7-ganz', icon: '➕', title: 'Plus-Minus-Arena', tags: ['Rechnen'],
     bp: 'Zahl – Variable – Operation', desc: 'Rechnen mit negativen Zahlen – Vorzeichen-Profi werden!',
     gen(l) {
-      let e, ans, hint;
+      let e, ans, hint, sol;
+      const f = (v) => U.fmt(v, 4);
+      const sgnTxt = (x, y) => ((x < 0) === (y < 0) ? 'gleiche Vorzeichen → plus' : 'verschiedene Vorzeichen → minus');
       if (l === 1) {
-        const a = U.rnz(-20, 20), b = U.rnz(-20, 20), plus = U.chance(0.5);
-        e = `${U.fmt(a)} ${plus ? '+' : '−'} ${P(b)}`; ans = plus ? a + b : a - b;
+        let a, b; do { a = U.rnz(-20, 20); b = U.rnz(-20, 20); } while (a > 0 && b > 0);
+        const plus = U.chance(0.5);
+        e = `${f(a)} ${plus ? '+' : '−'} ${P(b)}`; ans = plus ? a + b : a - b;
         hint = plus ? 'Plus eine negative Zahl = minus.' : 'Minus eine negative Zahl = plus!';
+        const rew = b < 0 ? `${f(a)} ${plus ? '−' : '+'} ${f(-b)}` : `${f(a)} ${plus ? '+' : '−'} ${f(b)}`;
+        sol = `${e} = ${rew} = <b>${f(ans)}</b>` + (b < 0 ? (plus ? ' (+ und − wird −)' : ' (− und − wird +)') : '');
       } else if (l === 2) {
         const k = U.ri(0, 2);
         if (k < 2) {
-          const a = U.rnz(-12, 12), b = U.rnz(-12, 12);
-          if (k === 0) { e = `${U.fmt(a)} · ${P(b)}`; ans = a * b; }
-          else { e = `${U.fmt(a * b)} : ${P(b)}`; ans = a; }
+          let a, b; do { a = U.rnz(-12, 12); b = U.rnz(-12, 12); } while (a > 0 && b > 0);
+          if (k === 0) { e = `${f(a)} · ${P(b)}`; ans = a * b; sol = `Beträge: ${Math.abs(a)} · ${Math.abs(b)} = ${Math.abs(ans)}; ${sgnTxt(a, b)} → <b>${f(ans)}</b>`; }
+          else { e = `${f(a * b)} : ${P(b)}`; ans = a; sol = `Beträge: ${Math.abs(a * b)} : ${Math.abs(b)} = ${Math.abs(a)}; ${sgnTxt(a * b, b)} → <b>${f(ans)}</b>`; }
           hint = 'Gleiche Vorzeichen → Ergebnis positiv. Verschiedene Vorzeichen → negativ.';
         } else {
           const a = U.rnz(-50, 50), b = U.rnz(-50, 50), c = U.rnz(-50, 50);
-          e = `${U.fmt(a)} − ${P(b)} + ${P(c)}`; ans = a - b + c;
+          e = `${f(a)} − ${P(b)} + ${P(c)}`; ans = a - b + c;
           hint = 'Löse erst die Klammern auf: −(−) wird +, +(−) wird −.';
+          sol = `Klammern auflösen: ${f(a)} ${b < 0 ? '+ ' + f(-b) : '− ' + f(b)} ${c < 0 ? '− ' + f(-c) : '+ ' + f(c)} = ${f(a - b)} ${c < 0 ? '− ' + f(-c) : '+ ' + f(c)} = <b>${f(ans)}</b>`;
         }
       } else {
         const k = U.ri(0, 2);
         if (k === 0) {
-          const a = U.rnz(-50, 50) / 10, b = U.rnz(-50, 50) / 10, op = U.pick(['+', '−', '·']);
+          let a, b; do { a = U.rnz(-50, 50) / 10; b = U.rnz(-50, 50) / 10; } while (a > 0 && b > 0);
+          const op = U.pick(['+', '−', '·']);
           e = `${U.fmt(a)} ${op} ${P(b)}`; ans = U.round(op === '+' ? a + b : op === '−' ? a - b : a * b, 4);
           hint = 'Rechne zuerst mit den Beträgen, dann überlege das Vorzeichen.';
+          sol = op === '·' ? `Beträge: ${f(Math.abs(a))} · ${f(Math.abs(b))} = ${f(Math.abs(ans))}; ${sgnTxt(a, b)} → <b>${f(ans)}</b>` : `${e} = ${b < 0 ? `${f(a)} ${op === '+' ? '−' : '+'} ${f(-b)}` : e} = <b>${f(ans)}</b>`;
         } else if (k === 1) {
           const a = U.rnz(-9, 9), b = U.rnz(-9, 9), c = U.rnz(-9, 9), d = U.rnz(-9, 9);
           e = `(${U.fmt(a)} + ${P(b)}) · ${P(c)} − ${P(d)}`; ans = (a + b) * c - d;
           hint = 'Klammer zuerst, dann Punkt vor Strich.';
+          sol = `Klammer: ${f(a)} + ${P(b)} = ${f(a + b)}; mal ${P(c)} = ${f((a + b) * c)}; minus ${P(d)} = <b>${f(ans)}</b>`;
         } else {
           const a = U.rnz(-6, 6), b = U.rnz(-6, 6), c = U.rnz(-20, 20);
           e = `${P(a)} · ${P(b)} − ${P(c)} · (−1)`; ans = a * b - c * -1;
           hint = 'Punkt vor Strich. Minus mal minus ergibt plus.';
+          sol = `Punktrechnungen: ${P(a)} · ${P(b)} = ${f(a * b)} und ${P(c)} · (−1) = ${f(-c)}. Dann ${f(a * b)} − ${P(-c)} = <b>${f(ans)}</b>`;
         }
       }
-      return N(U.expr(e + ' = ?'), ans, { mq: e, hints: [hint], sol: `${e} = ${U.fmt(ans, 4)}`, mistakes: ans !== 0 ? [{ v: -ans, msg: 'Fast! Achte auf das Vorzeichen.' }] : [] });
+      return N(U.expr(e + ' = ?'), ans, { mq: e, hints: [hint], sol, mistakes: ans !== 0 ? [{ v: -ans, msg: 'Fast! Achte auf das Vorzeichen.' }] : [] });
     },
   });
 
@@ -84,9 +94,13 @@
       } else if (l === 2) { x = U.ri(1, 12); a = U.ri(2, 5); b = U.ri(1, 20); c = 0; d = a * x + b; }
       else { x = U.ri(1, 10); c = U.ri(1, 3); a = c + U.ri(1, 3); b = U.ri(1, 12); d = (a - c) * x + b; }
       const eq = `${U.lin(a, b)} = ${U.lin(c, d)}`;
-      const sol = l === 3
-        ? `${eq} | − ${c}x → ${U.lin(a - c, b)} = ${d} | − ${b} → ${U.lin(a - c, 0)} = ${d - b} | : ${a - c} → x = ${x}`
-        : b && a > 1 ? `${eq} | − ${b} → ${a}x = ${d - b} | : ${a} → x = ${x}` : b ? `${eq} | − ${b} → x = ${x}` : `${eq} | : ${a} → x = ${x}`;
+      const steps = [eq];
+      if (l === 3) steps.push(`<br>| − ${c === 1 ? '' : c}x (Kisten wegnehmen) → ${U.lin(a - c, b)} = ${d}`);
+      const A = l === 3 ? a - c : a;
+      if (b) steps.push(`<br>| − ${b} (Gewichte wegnehmen) → ${U.lin(A, 0)} = ${d - b}`);
+      if (A !== 1) steps.push(`<br>| : ${A} (auf ${A} Kisten verteilen) → x = ${x}`);
+      steps.push(`<br>Probe: ${U.lin(a, b).replace('x', ' · ' + x).replace(/^ · /, '')} = ${a * x + b} ✔`);
+      const sol = steps.join(' ');
       const mist = [];
       if (b && a > 1 && (d + b) % a === 0) mist.push({ v: (d + b) / a, msg: 'Auf beiden Seiten das Gleiche ABziehen, nicht addieren!' });
       return N(`Die Waage ist im Gleichgewicht. Wie schwer ist eine Kiste? <span class="expr inl">${eq}</span>`, x, { vis: scale({ x: a, w: b }, { x: c, w: d }), mq: eq, hints: ['Nimm auf beiden Seiten das Gleiche weg – dann bleibt die Waage im Gleichgewicht.', l === 3 ? 'Nimm zuerst auf beiden Seiten gleich viele Kisten weg.' : 'Am Ende muss eine Kiste allein auf einer Seite stehen.'], sol, mistakes: mist });
@@ -94,34 +108,36 @@
   });
 
   /* ---------- 3 Prozent-Shop ---------- */
-  const ITEMS = [['👟', 'Turnschuhe', [40, 60, 80, 120]], ['🎧', 'Kopfhörer', [20, 40, 50, 80]], ['🎮', 'Spielkonsole', [200, 250, 300, 400]], ['🛹', 'Skateboard', [60, 80, 100, 140]], ['🎒', 'Rucksack', [30, 40, 50, 60]], ['⌚', 'Smartwatch', [80, 120, 160, 200]], ['🚲', 'Fahrrad', [300, 400, 500, 600]]];
+  // [Emoji, Name, Preise, Nominativ, Akkusativ, Pronomen]
+  const ITEMS = [['👟', 'Sneaker-Paar', [40, 60, 80, 120], 'das Sneaker-Paar', 'das Sneaker-Paar', 'es'], ['🎧', 'Kopfhörer', [20, 40, 50, 80], 'der Kopfhörer', 'den Kopfhörer', 'er'], ['🎮', 'Spielkonsole', [200, 250, 300, 400], 'die Spielkonsole', 'die Spielkonsole', 'sie'], ['🛹', 'Skateboard', [60, 80, 100, 140], 'das Skateboard', 'das Skateboard', 'es'], ['🎒', 'Rucksack', [30, 40, 50, 60], 'der Rucksack', 'den Rucksack', 'er'], ['⌚', 'Smartwatch', [80, 120, 160, 200], 'die Smartwatch', 'die Smartwatch', 'sie'], ['🚲', 'Fahrrad', [300, 400, 500, 600], 'das Fahrrad', 'das Fahrrad', 'es']];
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
   const tag = (emo, name, price, badge, old) => `<div class="shop"><div class="shop-emo">${emo}</div><div class="shop-name">${name}</div>${old ? `<div class="shop-old">${old}</div>` : ''}<div class="shop-price">${price}</div>${badge ? `<div class="shop-badge">${badge}</div>` : ''}</div>`;
   R({
     id: 'k7-prozent', icon: '🛍️', title: 'Prozent-Shop', tags: ['Text', 'visuell'],
     bp: 'Zahl – Variable – Operation', desc: 'Rabatte, Preise und Prozentsätze im Mathe-Laden.',
     gen(l) {
-      const [emo, name, prices] = U.pick(ITEMS);
+      const [emo, name, prices, nom, akk, pr] = U.pick(ITEMS);
       const Pp = U.pick(prices);
       if (l === 1) {
         const p = U.pick([10, 20, 25, 50]);
         const s = (Pp * p) / 100;
-        return N(`${name} für ${U.euro(Pp)} gibt es mit <b>${p} % Rabatt</b>. Wie viel Euro sparst du?`, s, { unit: '€', tol: 0.001, vis: tag(emo, name, U.euro(Pp), `−${p} %`), mq: `${p} % von ${U.euro(Pp)}`, hints: [p === 50 ? '50 % ist die Hälfte.' : p === 25 ? '25 % ist ein Viertel.' : '10 % ist ein Zehntel.'], sol: `${p} % von ${U.euro(Pp)} = ${U.euro(s)}` });
+        return N(`${cap(nom)} kostet ${U.euro(Pp)}. Heute gibt es <b>${p} % Rabatt</b>. Wie viel Euro sparst du?`, s, { unit: '€', tol: 0.001, vis: tag(emo, name, U.euro(Pp), `−${p} %`), mq: `${p} % von ${U.euro(Pp)}`, hints: [p === 50 ? '50 % ist die Hälfte.' : p === 25 ? '25 % ist ein Viertel.' : '10 % ist ein Zehntel.'], sol: `${p} % von ${U.euro(Pp)} = ${U.euro(s)}` });
       }
       if (l === 2) {
         if (U.chance(0.55)) {
           const p = U.ri(1, 8) * 5, neu = U.round(Pp * (1 - p / 100), 2);
-          return N(`${name} kostet ${U.euro(Pp)}. Heute gibt es <b>${p} % Rabatt</b>. Wie viel kostet es jetzt?`, neu, { unit: '€', tol: 0.001, vis: tag(emo, name, U.euro(Pp), `−${p} %`), mq: `${U.euro(Pp)} − ${p} %`, hints: ['Berechne den Rabatt in Euro und ziehe ihn ab – oder rechne mit ' + (100 - p) + ' %.'], sol: `${U.euro(Pp)} · ${U.fmt(1 - p / 100)} = ${U.euro(neu)}`, mistakes: [{ v: U.round((Pp * p) / 100, 2), msg: 'Das ist die Ersparnis – zieh sie noch vom alten Preis ab!' }] });
+          return N(`${cap(nom)} kostet ${U.euro(Pp)}. Heute gibt es <b>${p} % Rabatt</b>. Wie viel kostet ${pr} jetzt?`, neu, { unit: '€', tol: 0.001, vis: tag(emo, name, U.euro(Pp), `−${p} %`), mq: `${U.euro(Pp)} − ${p} %`, hints: ['Berechne den Rabatt in Euro und ziehe ihn ab – oder rechne mit ' + (100 - p) + ' %.'], sol: `${U.euro(Pp)} · ${U.fmt(1 - p / 100)} = ${U.euro(neu)}`, mistakes: [{ v: U.round((Pp * p) / 100, 2), msg: 'Das ist die Ersparnis – zieh sie noch vom alten Preis ab!' }] });
         }
         const p = U.ri(1, 8) * 5, neu = U.round(Pp * (1 - p / 100), 2);
         return N(`Der Preis sinkt von ${U.euro(Pp)} auf ${U.euro(neu)}. Um wie viel Prozent wurde der Preis gesenkt?`, p, { unit: '%', vis: tag(emo, name, U.euro(neu), '', U.euro(Pp)), mq: `${U.euro(Pp)} → ${U.euro(neu)}: Rabatt?`, hints: ['Prozentsatz = Prozentwert : Grundwert · 100'], sol: `Ersparnis ${U.euro(Pp - neu)}; ${U.euro(Pp - neu)} : ${U.euro(Pp)} = ${U.fmt(p / 100)} = ${p} %` });
       }
       if (U.chance(0.5)) {
         const p = U.pick([10, 20, 25, 40, 50]), neu = U.round(Pp * (1 - p / 100), 2);
-        return N(`Nach <b>${p} % Rabatt</b> kostet ${name} nur noch ${U.euro(neu)}. Wie teuer war es vorher?`, Pp, { unit: '€', tol: 0.001, vis: tag(emo, name, U.euro(neu), `−${p} %`, '?? €'), mq: `nach −${p} %: ${U.euro(neu)}`, hints: [`${U.euro(neu)} sind ${100 - p} % des alten Preises.`], sol: `${U.euro(neu)} : ${U.fmt(1 - p / 100)} = ${U.euro(Pp)}`, mistakes: [{ v: U.round(neu * (1 + p / 100), 2), msg: 'Nicht einfach p % aufschlagen: Der Rabatt bezog sich auf den ALTEN Preis!' }] });
+        return N(`Nach <b>${p} % Rabatt</b> kostet ${nom} nur noch ${U.euro(neu)}. Wie teuer war ${pr} vorher?`, Pp, { unit: '€', tol: 0.001, vis: tag(emo, name, U.euro(neu), `−${p} %`, '?? €'), mq: `nach −${p} %: ${U.euro(neu)}`, hints: [`${U.euro(neu)} sind ${100 - p} % des alten Preises.`], sol: `${U.euro(neu)} : ${U.fmt(1 - p / 100)} = ${U.euro(Pp)}`, mistakes: [{ v: U.round(neu * (1 + p / 100), 2), msg: 'Nicht einfach p % aufschlagen: Der Rabatt bezog sich auf den ALTEN Preis!' }] });
       }
       const p = U.pick([10, 20, 25, 50]);
       const end = U.round(Pp * (1 + p / 100) * (1 - p / 100), 2);
-      return N(`Ein Händler erhöht den Preis von ${name} (${U.euro(Pp)}) um ${p} % und senkt ihn eine Woche später um ${p} %. Wie viel kostet es dann?`, end, { unit: '€', tol: 0.001, vis: tag(emo, name, U.euro(Pp), `+${p} % → −${p} %`), hints: ['Die Senkung bezieht sich auf den NEUEN, erhöhten Preis.'], sol: `${U.euro(Pp)} · ${U.fmt(1 + p / 100)} · ${U.fmt(1 - p / 100)} = ${U.euro(end)}`, mistakes: [{ v: Pp, msg: 'Überraschung: Es kommt nicht der alte Preis heraus! Die Senkung bezieht sich auf den höheren Preis.' }] });
+      return N(`Ein Händler erhöht den Preis für ${akk} (${U.euro(Pp)}) um ${p} % und senkt ihn eine Woche später um ${p} %. Wie viel kostet ${pr} dann?`, end, { unit: '€', tol: 0.001, vis: tag(emo, name, U.euro(Pp), `+${p} % → −${p} %`), hints: ['Die Senkung bezieht sich auf den NEUEN, erhöhten Preis.'], sol: `${U.euro(Pp)} · ${U.fmt(1 + p / 100)} · ${U.fmt(1 - p / 100)} = ${U.euro(end)}`, mistakes: [{ v: Pp, msg: 'Überraschung: Es kommt nicht der alte Preis heraus! Die Senkung bezieht sich auf den höheren Preis.' }] });
     },
   });
 
@@ -156,7 +172,8 @@
         const thing = U.pick([['Bagger', 'Tage'], ['Pumpen', 'Stunden'], ['Maler', 'Tage']]);
         return N(`${n1} ${thing[0]} brauchen ${t1} ${thing[1]}. Wie lange brauchen ${n2} ${thing[0]} (gleich schnell)?`, (n1 * t1) / n2, { unit: thing[1], mq: `${n1} ${thing[0]}: ${t1} ${thing[1]} → ${n2}?`, hints: ['Mehr Arbeitende → weniger Zeit: antiproportional!', 'Wie lange bräuchte einer allein?'], sol: `${n1} · ${t1} = ${n1 * t1}; ${n1 * t1} : ${n2} = ${U.fmt((n1 * t1) / n2)} ${thing[1]}`, mistakes: [{ v: (t1 * n2) / n1, msg: 'Antiproportional! Mehr Bagger/Pumpen/Maler brauchen WENIGER Zeit.' }] });
       }
-      const kg = U.ri(2, 5), price = U.pick([1.5, 2.5, 1.8, 2.2, 3.2]) * kg, kg2 = U.ri(2, 9);
+      const kg = U.ri(2, 5), price = U.pick([1.5, 2.5, 1.8, 2.2, 3.2]) * kg;
+      let kg2; do kg2 = U.ri(2, 9); while (kg2 === kg);
       const ans = U.round((price / kg) * kg2, 2);
       return N(`${kg} kg Äpfel kosten ${U.euro(price)}. Wie viel kosten ${kg2} kg?`, ans, { unit: '€', tol: 0.001, mq: `${kg} kg: ${U.euro(price)} → ${kg2} kg?`, hints: ['Dreisatz: erst den Preis für 1 kg berechnen.'], sol: `${U.euro(price)} : ${kg} = ${U.euro(price / kg)} pro kg; · ${kg2} = ${U.euro(ans)}` });
     },
@@ -170,17 +187,18 @@
       if (l === 1) {
         const a = U.ri(2, 9), b = U.rnz(-10, 12), x = U.ri(-5, 6);
         const T = U.lin(a, b);
-        return N(`Berechne den Term <span class="expr inl">${T}</span> für <b>x = ${U.fmt(x)}</b>.`, a * x + b, { mq: `${T} für x = ${U.fmt(x)}`, hints: [`Setze für x die Zahl ${U.fmt(x)} ein: ${a} · ${P(x)} ${b < 0 ? '−' : '+'} ${Math.abs(b)}`], sol: `${a} · ${P(x)} ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ${a * x + b}` });
+        return N(`Berechne den Term <span class="expr inl">${T}</span> für <b>x = ${U.fmt(x)}</b>.`, a * x + b, { mq: `${T} für x = ${U.fmt(x)}`, hints: [`Setze für x die Zahl ${U.fmt(x)} ein: ${a} · ${P(x)} ${b < 0 ? '−' : '+'} ${Math.abs(b)}`], sol: `${a} · ${P(x)} ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ${U.fmt(a * x)} ${b < 0 ? '−' : '+'} ${Math.abs(b)} = <b>${U.fmt(a * x + b)}</b>` });
       }
       if (l === 2) {
         const a = U.ri(2, 9), b = U.ri(1, 12), c = U.rnz(-6, 9), d = U.ri(1, 12);
         const T = `${a}x + ${b} ${c < 0 ? '−' : '+'} ${Math.abs(c) === 1 ? '' : Math.abs(c)}x − ${d}`;
-        const t = { q: `Fasse zusammen: <span class="expr inl">${T}</span>`, mq: T, hints: ['Fasse x-Glieder mit x-Gliedern und Zahlen mit Zahlen zusammen.'], sol: `${a}x ${c < 0 ? '−' : '+'} ${Math.abs(c)}x = ${U.lin(a + c, 0)}; ${b} − ${d} = ${b - d} → ${U.lin(a + c, b - d)}` };
+        const t = { q: `Fasse zusammen: <span class="expr inl">${T}</span>`, mq: T, hints: ['Fasse x-Glieder mit x-Gliedern und Zahlen mit Zahlen zusammen.', 'Das Vorzeichen gehört immer zu dem Glied, das danach kommt.'], sol: `x-Glieder: ${a}x ${c < 0 ? '−' : '+'} ${Math.abs(c) === 1 ? '' : Math.abs(c)}x = ${U.lin(a + c, 0)}; Zahlen: ${b} − ${d} = ${U.fmt(b - d)} → <b>${U.lin(a + c, b - d)}</b>` };
         return U.choice(t, U.lin(a + c, b - d), [{ h: U.lin(a + c, b + d), msg: 'Achte auf das Minus vor der Zahl!' }, { h: U.lin(a + c + b - d, 0), msg: 'x-Glieder und Zahlen darf man nicht zusammenfassen!' }, { h: U.lin(a - c, b - d), msg: 'Achte auf das Vorzeichen vor dem zweiten x-Glied.' }, U.lin(a + c + 1, b - d)]);
       }
       const k = U.ri(2, 5), m = U.ri(2, 6), n = U.ri(1, 9), p = U.ri(1, 9);
-      const T = `−${k}(${m}x − ${n}) + ${p}x`;
-      const t = { q: `Löse die Klammer auf und fasse zusammen: <span class="expr inl">${T}</span>`, mq: T, hints: ['Das −' + k + ' wird mit JEDEM Glied in der Klammer multipliziert.', `−${k} · (−${n}) = +${k * n}`], sol: `−${k} · ${m}x = −${k * m}x; −${k} · (−${n}) = +${k * n}; dann + ${p}x → ${U.lin(p - k * m, k * n)}` };
+      const px = p === 1 ? 'x' : p + 'x';
+      const T = `−${k}(${m}x − ${n}) + ${px}`;
+      const t = { q: `Löse die Klammer auf und fasse zusammen: <span class="expr inl">${T}</span>`, mq: T, hints: ['Das −' + k + ' wird mit JEDEM Glied in der Klammer multipliziert.', `−${k} · (−${n}) = +${k * n}`], sol: `−${k} · ${m}x = −${k * m}x; −${k} · (−${n}) = +${k * n}; dann + ${px} → ${U.lin(p - k * m, k * n)}` };
       return U.choice(t, U.lin(p - k * m, k * n), [{ h: U.lin(p - k * m, -k * n), msg: 'Minus mal minus ergibt plus!' }, { h: U.lin(p - k * m, -n), msg: 'Auch die Zahl in der Klammer muss multipliziert werden.' }, { h: U.lin(p + k * m, k * n), msg: 'Das Vorzeichen vor der Klammer gilt auch für das x-Glied.' }, U.lin(p - m, n)]);
     },
   });
